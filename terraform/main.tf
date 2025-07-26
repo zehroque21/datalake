@@ -12,7 +12,7 @@ provider "aws" {
 }
 
 resource "aws_instance" "airflow_vm" {
-  ami           = "ami-0c55b159cbfafe1f0" # Ubuntu Server 22.04 LTS (HVM), SSD Volume Type
+  ami           = "ami-09ac0b140f63d3458" # Ubuntu Server 22.04 LTS (HVM), SSD Volume Type
   instance_type = "t2.micro"
 
   tags = {
