@@ -28,10 +28,6 @@ resource "aws_instance" "airflow_vm" {
   ami           = data.aws_ami.ubuntu.id
   instance_type = "t3.micro"
 
-  lifecycle {
-    create_before_destroy = true
-  }
-
   tags = {
     Name = "Airflow VM"
   }
@@ -40,5 +36,15 @@ resource "aws_instance" "airflow_vm" {
 data "aws_s3_bucket" "datalake" {
   bucket = "datalake-bucket-for-airflow-and-delta-v2"
 }
+
+
+
+
+# Triggering GitHub Actions workflow
+
+
+
+
+# Triggering GitHub Actions workflow again
 
 
