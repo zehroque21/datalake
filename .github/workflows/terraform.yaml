@@ -78,6 +78,21 @@ jobs:
 
 
 
+    - name: Terminate old EC2 instances
+      run: |
+        INSTANCE_IDS=$(aws ec2 describe-instances \
+          --filters "Name=tag:Name,Values=Airflow VM" \
+          --query "Reservations[*].Instances[*].InstanceId" \
+          --output text)
+        
+        if [ -n "$INSTANCE_IDS" ]; then
+          echo "Terminating old EC2 instances: $INSTANCE_IDS"
+          aws ec2 terminate-instances --instance-ids $INSTANCE_IDS
+          aws ec2 wait instance-terminated --instance-ids $INSTANCE_IDS
+        else
+          echo "No old EC2 instances found to terminate."
+        fi
+
     - name: Terraform Apply
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
       run: terraform apply -auto-approve
