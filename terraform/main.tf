@@ -34,7 +34,7 @@ resource "aws_instance" "airflow_vm" {
 }
 
 resource "aws_s3_bucket" "datalake" {
-  bucket = "datalake-bucket-for-airflow-and-delta"
+  bucket = "datalake-bucket-for-airflow-and-delta-v2"
 
   tags = {
     Name = "Datalake Bucket"
