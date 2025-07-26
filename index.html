@@ -1,13 +1,86 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minha Página GitHub Pages</title>
+    <title>Projeto Datalake AWS Free Tier</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2, h3 {
+            color: #0056b3;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 20px auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .creator-section {
+            background-color: #e9ecef;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        .creator-section h3 {
+            color: #0056b3;
+        }
+        .creator-section p {
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Bem-vindo à minha página GitHub Pages!</h1>
-    <p>Esta é uma página de exemplo criada pelo Manus.</p>
+    <div class="container">
+        <h1>Projeto Datalake AWS Free Tier</h1>
+        <p>Este projeto tem como objetivo demonstrar a construção de um ambiente de Datalake na Amazon Web Services (AWS), utilizando exclusivamente os recursos do Free Tier. O foco é aprender e experimentar com ferramentas de engenharia de dados open source, como Python, Apache Spark e Delta Lake, orquestradas pelo Apache Airflow.</p>
+
+        <h2>Estrutura do Datalake</h2>
+        <p>A infraestrutura é provisionada de forma automatizada utilizando Terraform e GitHub Actions, garantindo um ambiente consistente e replicável. Os principais componentes incluem:</p>
+        <ul>
+            <li><strong>Máquina Virtual (EC2 - t3.micro):</strong> Hospeda o Apache Airflow, responsável pela orquestração dos pipelines de dados.</li>
+            <li><strong>Armazenamento de Objetos (S3):</strong> Atua como o Data Lake, armazenando dados no formato Delta Lake, que oferece transações ACID, versionamento e outras funcionalidades avançadas.</li>
+            <li><strong>GitHub Actions:</strong> Automatiza o deploy da infraestrutura via Terraform, garantindo que as alterações sejam aplicadas de forma controlada e que apenas uma instância EC2 esteja ativa por vez.</li>
+        </ul>
+
+        <h3>Fluxograma da Estrutura</h3>
+        <p>O diagrama abaixo ilustra o fluxo de dados e a interação entre os componentes do Datalake:</p>
+        <img src="diagrams/datalake_flow.png" alt="Fluxograma da Estrutura do Datalake">
+
+        <h2>Como Funciona</h2>
+        <p>O processo de engenharia de dados neste ambiente segue as seguintes etapas:</p>
+        <ol>
+            <li><strong>Ingestão de Dados:</strong> Dados de diversas fontes são ingeridos e armazenados no S3 no formato Delta Lake.</li>
+            <li><strong>Processamento e Transformação:</strong> Pipelines orquestrados pelo Airflow executam jobs em Python/Spark para processar e transformar os dados, criando camadas de dados (Bronze, Silver, Gold).</li>
+            <li><strong>Armazenamento Delta Lake:</strong> Os dados processados são armazenados no S3 como tabelas Delta Lake, aproveitando seus recursos de confiabilidade e performance.</li>
+            <li><strong>Consumo:</strong> Os dados transformados podem ser acessados por ferramentas de análise, dashboards de BI ou outras aplicações.</li>
+        </ol>
+
+        <div class="creator-section">
+            <h2>Sobre o Criador</h2>
+            <h3>Amado Roque - Senior Data Engineer</h3>
+            <p>Com mais de 7 anos de experiência em engenharia de dados, Amado Roque é um profissional focado em projetar e executar soluções de dados robustas que aprimoram insights de negócios e eficiência operacional. Possui proficiência em SQL, Python e plataformas de nuvem como AWS, Databricks e GCP, demonstrando forte capacidade de transformar dados complexos em estratégias acionáveis para organizações.</p>
+            <p>Sua experiência inclui a liderança de equipes de engenheiros de dados, integração de APIs e dispositivos, garantia de governança de dados, e a construção de infraestruturas de datalake em ambientes como Databricks e Google Cloud Platform. Amado também possui expertise em orquestração de pipelines com Databricks Workflows e Apache Airflow, além de otimização de custos e performance em ambientes de nuvem.</p>
+            <p><strong>Contato:</strong> <a href="mailto:amado.roze@gmail.com">amado.roze@gmail.com</a> | <a href="https://www.linkedin.com/in/amado-roque/" target="_blank">LinkedIn</a></p>
+        </div>
+    </div>
 </body>
 </html>
+
 
