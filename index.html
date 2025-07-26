@@ -3,11 +3,505 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minha Página GitHub Pages</title>
+    <title>DataLake AWS - Plataforma de Engenharia de Dados</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+        }
+
+        .hero {
+            padding: 120px 0 80px;
+            text-align: center;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: #ff6b6b;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+        }
+
+        .main-content {
+            background: white;
+            margin-top: -50px;
+            border-radius: 20px 20px 0 0;
+            position: relative;
+            z-index: 10;
+        }
+
+        .section {
+            padding: 80px 0;
+        }
+
+        .section h2 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: #333;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .architecture {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 3rem;
+            margin: 3rem 0;
+        }
+
+        .architecture h3 {
+            font-size: 2rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #333;
+        }
+
+        .flow-diagram {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .flow-item {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            min-width: 150px;
+        }
+
+        .flow-arrow {
+            font-size: 2rem;
+            color: #667eea;
+        }
+
+        .creator-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 3rem;
+            margin: 3rem 0;
+        }
+
+        .creator-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .creator-info h3 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .creator-info p {
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        .skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .skill-tag {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .social-links {
+            margin-top: 2rem;
+        }
+
+        .social-links a {
+            color: white;
+            font-size: 1.5rem;
+            margin-right: 1rem;
+            transition: opacity 0.3s ease;
+        }
+
+        .social-links a:hover {
+            opacity: 0.7;
+        }
+
+        footer {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .creator-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .flow-diagram {
+                flex-direction: column;
+            }
+
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Bem-vindo à minha página GitHub Pages!</h1>
-    <p>Esta é uma página de exemplo criada pelo Manus.</p>
+    <header>
+        <nav class="container">
+            <div class="logo">
+                <i class="fas fa-database"></i> DataLake AWS
+            </div>
+            <ul class="nav-links">
+                <li><a href="#overview">Visão Geral</a></li>
+                <li><a href="#architecture">Arquitetura</a></li>
+                <li><a href="#creator">Criador</a></li>
+                <li><a href="https://github.com/zehroque21/datalake" target="_blank">GitHub</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h1>DataLake AWS</h1>
+            <p>Plataforma moderna de engenharia de dados com Apache Airflow e Delta Lake, provisionada automaticamente na AWS</p>
+            <a href="https://github.com/zehroque21/datalake" class="cta-button" target="_blank">
+                <i class="fab fa-github"></i> Ver no GitHub
+            </a>
+        </div>
+    </section>
+
+    <main class="main-content">
+        <section id="overview" class="section">
+            <div class="container">
+                <h2>Visão Geral</h2>
+                <p style="text-align: center; font-size: 1.1rem; margin-bottom: 3rem; color: #666; max-width: 800px; margin-left: auto; margin-right: auto;">
+                    Uma solução completa de datalake que combina as melhores práticas de engenharia de dados com infraestrutura como código, oferecendo um ambiente robusto para processamento e análise de dados em escala.
+                </p>
+
+                <div class="features">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-wind"></i>
+                        </div>
+                        <h3>Apache Airflow</h3>
+                        <p>Orquestração avançada de pipelines de dados com interface web intuitiva e monitoramento em tempo real.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <h3>Delta Lake</h3>
+                        <p>Armazenamento de dados confiável com controle de versão, transações ACID e otimizações de performance.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <h3>AWS S3</h3>
+                        <p>Armazenamento escalável e durável para dados brutos e processados com alta disponibilidade.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-server"></i>
+                        </div>
+                        <h3>EC2 Otimizada</h3>
+                        <p>Instância EC2 configurada automaticamente com todas as dependências necessárias para processamento de dados.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-code-branch"></i>
+                        </div>
+                        <h3>CI/CD Integrado</h3>
+                        <p>Deploy automatizado via GitHub Actions com Terraform para infraestrutura como código.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3>Analytics Ready</h3>
+                        <p>Ambiente preparado para análises avançadas com Python, Spark e ferramentas de visualização.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="architecture" class="section">
+            <div class="container">
+                <div class="architecture">
+                    <h3><i class="fas fa-sitemap"></i> Arquitetura da Solução</h3>
+                    
+                    <div class="flow-diagram">
+                        <div class="flow-item">
+                            <i class="fab fa-github" style="font-size: 2rem; color: #333; margin-bottom: 0.5rem;"></i>
+                            <h4>GitHub Actions</h4>
+                            <p>CI/CD Pipeline</p>
+                        </div>
+                        
+                        <div class="flow-arrow">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                        
+                        <div class="flow-item">
+                            <i class="fas fa-hammer" style="font-size: 2rem; color: #ff6b35; margin-bottom: 0.5rem;"></i>
+                            <h4>Terraform</h4>
+                            <p>Infraestrutura como Código</p>
+                        </div>
+                        
+                        <div class="flow-arrow">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                        
+                        <div class="flow-item">
+                            <i class="fab fa-aws" style="font-size: 2rem; color: #ff9900; margin-bottom: 0.5rem;"></i>
+                            <h4>AWS EC2</h4>
+                            <p>Apache Airflow</p>
+                        </div>
+                        
+                        <div class="flow-arrow">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                        
+                        <div class="flow-item">
+                            <i class="fas fa-database" style="font-size: 2rem; color: #4CAF50; margin-bottom: 0.5rem;"></i>
+                            <h4>AWS S3</h4>
+                            <p>Delta Lake Storage</p>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 2rem; padding: 2rem; background: white; border-radius: 10px;">
+                        <h4 style="margin-bottom: 1rem; color: #333;">Fluxo de Dados:</h4>
+                        <ol style="color: #666; line-height: 1.8;">
+                            <li><strong>Ingestão:</strong> Dados são coletados de diversas fontes através de pipelines do Airflow</li>
+                            <li><strong>Processamento:</strong> Transformações e limpeza de dados usando Python e Spark</li>
+                            <li><strong>Armazenamento:</strong> Dados processados são salvos no formato Delta Lake no S3</li>
+                            <li><strong>Análise:</strong> Dados estão prontos para consultas e análises avançadas</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="creator" class="section">
+            <div class="container">
+                <div class="creator-section">
+                    <div class="creator-content">
+                        <div class="creator-info">
+                            <h3><i class="fas fa-user-circle"></i> Sobre o Criador</h3>
+                            <p><strong>Amado Roque</strong> é um engenheiro de dados especializado em soluções de big data e analytics, com vasta experiência em arquiteturas de dados modernas e tecnologias de nuvem.</p>
+                            
+                            <p>Com formação sólida em engenharia e pós-graduação em Business Intelligence, Amado combina conhecimento técnico profundo com visão estratégica de negócios para criar soluções de dados que geram valor real.</p>
+                            
+                            <div class="skills">
+                                <span class="skill-tag">Python</span>
+                                <span class="skill-tag">Apache Spark</span>
+                                <span class="skill-tag">Delta Lake</span>
+                                <span class="skill-tag">Apache Airflow</span>
+                                <span class="skill-tag">AWS</span>
+                                <span class="skill-tag">Terraform</span>
+                                <span class="skill-tag">SQL</span>
+                                <span class="skill-tag">Data Engineering</span>
+                            </div>
+                            
+                            <div class="social-links">
+                                <a href="https://www.linkedin.com/in/amado-roque/" target="_blank" title="LinkedIn">
+                                    <i class="fab fa-linkedin"></i>
+                                </a>
+                                <a href="https://github.com/zehroque21" target="_blank" title="GitHub">
+                                    <i class="fab fa-github"></i>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div style="text-align: center;">
+                            <div style="background: rgba(255, 255, 255, 0.1); padding: 2rem; border-radius: 15px; backdrop-filter: blur(10px);">
+                                <i class="fas fa-quote-left" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                                <p style="font-size: 1.2rem; font-style: italic; margin-bottom: 1rem;">
+                                    "Transformar dados em insights acionáveis é mais do que tecnologia - é sobre criar valor e impacto real nos negócios."
+                                </p>
+                                <p style="font-weight: 600;">- Amado Roque</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 DataLake AWS. Desenvolvido com <i class="fas fa-heart" style="color: #ff6b6b;"></i> por Amado Roque</p>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add scroll effect to header
+        window.addEventListener('scroll', function() {
+            const header = document.querySelector('header');
+            if (window.scrollY > 100) {
+                header.style.background = 'rgba(255, 255, 255, 0.98)';
+            } else {
+                header.style.background = 'rgba(255, 255, 255, 0.95)';
+            }
+        });
+    </script>
 </body>
 </html>
 

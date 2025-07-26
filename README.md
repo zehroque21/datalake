@@ -1,45 +1,151 @@
-# Datalake de Aprendizado na AWS (Free Tier)
+# DataLake AWS - Plataforma de Engenharia de Dados
 
-Este repositório contém a infraestrutura como código (IaC) e scripts para provisionar um ambiente de datalake de aprendizado na Amazon Web Services (AWS), utilizando os recursos do Free Tier. O objetivo é permitir a experimentação com ferramentas de engenharia de dados como Apache Airflow e Delta Lake, sem incorrer em custos.
+🌐 **[Acesse a página do projeto](https://zehroque21.github.io/datalake/)** para uma visão completa da solução.
 
-## Infraestrutura Provisionada (via Terraform)
+---
 
-O Terraform é utilizado para provisionar os seguintes recursos na sua conta AWS:
+Este repositório contém uma solução completa de datalake que combina as melhores práticas de engenharia de dados com infraestrutura como código (IaC). A plataforma oferece um ambiente robusto para processamento e análise de dados em escala, utilizando Apache Airflow para orquestração e Delta Lake para armazenamento confiável.
 
-1.  **Instância EC2 (`aws_instance.airflow_vm`)**:
-    *   **Tipo:** `t3.micro` (elegível para o Free Tier).
-    *   **AMI:** Ubuntu Server 22.04 LTS (a AMI mais recente é buscada dinamicamente para garantir compatibilidade).
-    *   **Finalidade:** Esta máquina virtual servirá como host para a instalação do Apache Airflow, que será utilizado para orquestrar pipelines de dados. É um ambiente flexível para rodar scripts Python, Spark (se configurado) e outras ferramentas.
+## 🚀 Visão Geral
 
-2.  **Bucket S3 (`aws_s3_bucket.datalake`)**:
-    *   **Nome:** `datalake-bucket-for-airflow-and-delta-v2` (ou o nome atualizado no `main.tf`).
-    *   **Finalidade:** Este bucket será o armazenamento principal do seu datalake. Ele será usado para armazenar dados brutos, dados processados e, crucialmente, as tabelas Delta Lake. O S3 é um serviço de armazenamento de objetos altamente escalável e durável, com um generoso Free Tier.
+A solução provisiona automaticamente uma infraestrutura moderna de datalake na Amazon Web Services (AWS), integrando:
 
-## Como Funciona
+- **Apache Airflow** para orquestração de pipelines de dados
+- **Delta Lake** para armazenamento transacional e versionado
+- **AWS S3** para storage escalável e durável
+- **EC2** otimizada para processamento de dados
+- **CI/CD** integrado via GitHub Actions
 
-As alterações na infraestrutura são automatizadas via GitHub Actions. Quando você faz um `push` para a branch `main` (ou abre um Pull Request), um workflow do GitHub Actions é disparado para executar o Terraform.
+## 🏗️ Infraestrutura Provisionada
 
-### GitHub Actions Workflow (`.github/workflows/terraform.yaml`)
+O Terraform provisiona os seguintes recursos na AWS:
 
-Este workflow é responsável por:
+### 1. Instância EC2 (`aws_instance.airflow_vm`)
+- **Tipo:** `t3.micro` (otimizada para cargas de trabalho de dados)
+- **AMI:** Ubuntu Server 22.04 LTS (selecionada dinamicamente)
+- **Finalidade:** Host para Apache Airflow, scripts Python, Spark e outras ferramentas de processamento
 
-*   **Configurar Credenciais AWS:** Utiliza os `AWS_ACCESS_KEY_ID` e `AWS_SECRET_ACCESS_KEY` configurados como GitHub Secrets para autenticar na AWS.
-*   **Inicializar Terraform:** Executa `terraform init` para preparar o diretório de trabalho do Terraform.
-*   **Validar e Planejar:** Executa `terraform fmt` para formatar o código, `terraform validate` para verificar a sintaxe e `terraform plan` para mostrar as mudanças que serão aplicadas.
-*   **Aplicar Mudanças:** Executa `terraform apply` para provisionar ou atualizar os recursos na AWS. **Este passo só é executado em `push` para a branch `main` e em Pull Requests para `main` (com aprovação manual para `apply`).**
+### 2. Bucket S3 (`data.aws_s3_bucket.datalake`)
+- **Nome:** `datalake-bucket-for-airflow-and-delta-v2`
+- **Finalidade:** Armazenamento principal do datalake para dados brutos, processados e tabelas Delta Lake
 
-## Scripts Adicionais
+## ⚙️ Automação e Deploy
 
-*   **`scripts/install_airflow.sh`**: Um script shell para auxiliar na instalação do Apache Airflow na instância EC2 provisionada.
-*   **`scripts/delta_lake_examples/`**: Contém exemplos de scripts Python para interagir com o Delta Lake no S3, demonstrando como ler e escrever dados em formato Delta.
+### GitHub Actions Workflow
 
-## Próximos Passos
+O pipeline automatizado (`/.github/workflows/terraform.yaml`) executa:
 
-1.  **Configurar GitHub Secrets:** Certifique-se de que `AWS_ACCESS_KEY_ID` e `AWS_SECRET_ACCESS_KEY` estão configurados como GitHub Secrets no seu repositório, com as permissões IAM adequadas para criar EC2 e S3.
-2.  **Acompanhar o Deploy:** Monitore o progresso do workflow do GitHub Actions na aba "Actions" do seu repositório.
-3.  **Acessar a VM:** Após o deploy bem-sucedido, você poderá acessar a instância EC2 via SSH (utilizando a chave SSH que você associar à instância, se configurado no Terraform, ou criando uma manualmente).
-4.  **Instalar Airflow:** Execute o script `install_airflow.sh` na VM para configurar o Apache Airflow.
-5.  **Experimentar Delta Lake:** Utilize os scripts de exemplo do Delta Lake para começar a trabalhar com dados no S3.
+1. **Limpeza de Recursos:** Remove instâncias antigas para otimizar custos
+2. **Validação:** Formata, valida e planeja mudanças no Terraform
+3. **Provisionamento:** Aplica a infraestrutura na AWS
+4. **Outputs:** Exibe informações dos recursos criados
 
-Este ambiente é projetado para aprendizado e experimentação. Lembre-se de monitorar o uso dos recursos da AWS para garantir que você permaneça dentro dos limites do Free Tier.
+**Triggers:**
+- Push para branch `main` (apenas arquivos em `/terraform/`)
+- Pull Requests para `main`
+
+### Configuração de Credenciais
+
+Configure os seguintes GitHub Secrets:
+- `AWS_ACCESS_KEY_ID`: Chave de acesso AWS
+- `AWS_SECRET_ACCESS_KEY`: Chave secreta AWS
+
+## 📁 Estrutura do Projeto
+
+```
+├── terraform/                 # Infraestrutura como código
+│   ├── main.tf               # Recursos principais (EC2, S3)
+│   ├── variables.tf          # Variáveis do Terraform
+│   └── outputs.tf            # Outputs dos recursos
+├── scripts/                  # Scripts de configuração e exemplos
+│   ├── install_airflow.sh    # Instalação do Apache Airflow
+│   └── delta_lake_examples/  # Exemplos de uso do Delta Lake
+│       ├── write_delta_table.py
+│       └── read_delta_table.py
+├── .github/workflows/        # Pipelines CI/CD
+│   └── terraform.yaml        # Workflow principal
+└── index.html               # Página do projeto (GitHub Pages)
+```
+
+## 🛠️ Configuração e Uso
+
+### 1. Deploy da Infraestrutura
+```bash
+# O deploy é automático via GitHub Actions
+# Faça push de alterações em /terraform/ para disparar
+git add terraform/
+git commit -m "Update infrastructure"
+git push origin main
+```
+
+### 2. Acesso à Instância EC2
+```bash
+# Conecte-se via SSH (configure sua chave SSH na AWS)
+ssh -i sua-chave.pem ubuntu@<IP_PUBLICO_EC2>
+```
+
+### 3. Instalação do Airflow
+```bash
+# Na instância EC2, execute:
+cd /path/to/repository
+bash scripts/install_airflow.sh
+```
+
+### 4. Uso do Delta Lake
+```python
+# Exemplo de escrita
+python scripts/delta_lake_examples/write_delta_table.py
+
+# Exemplo de leitura
+python scripts/delta_lake_examples/read_delta_table.py
+```
+
+## 🔧 Tecnologias Utilizadas
+
+- **Infraestrutura:** Terraform, AWS (EC2, S3, IAM)
+- **Orquestração:** Apache Airflow
+- **Armazenamento:** Delta Lake, AWS S3
+- **Processamento:** Python, Apache Spark
+- **CI/CD:** GitHub Actions
+- **Monitoramento:** Airflow Web UI
+
+## 📊 Arquitetura da Solução
+
+```
+GitHub Actions → Terraform → AWS EC2 (Airflow) → AWS S3 (Delta Lake)
+```
+
+1. **Ingestão:** Coleta de dados via pipelines Airflow
+2. **Processamento:** Transformações com Python/Spark
+3. **Armazenamento:** Dados salvos em formato Delta Lake
+4. **Análise:** Consultas e analytics sobre os dados processados
+
+## 🎯 Casos de Uso
+
+- **ETL/ELT Pipelines:** Processamento automatizado de dados
+- **Data Warehousing:** Armazenamento estruturado para analytics
+- **Real-time Analytics:** Processamento de streams de dados
+- **Machine Learning:** Preparação de dados para modelos ML
+- **Business Intelligence:** Dashboards e relatórios
+
+## 👨‍💻 Sobre o Criador
+
+**Amado Roque** - Engenheiro de Dados especializado em soluções de big data e analytics.
+
+- 🔗 [LinkedIn](https://www.linkedin.com/in/amado-roque/)
+- 🐙 [GitHub](https://github.com/zehroque21)
+
+---
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+## 🤝 Contribuições
+
+Contribuições são bem-vindas! Sinta-se à vontade para abrir issues e pull requests.
+
+---
+
+**[🌐 Visite a página do projeto](https://zehroque21.github.io/datalake/)** para mais informações e documentação visual.
 
