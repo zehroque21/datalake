@@ -38,7 +38,7 @@ resource "aws_instance" "airflow_vm" {
 }
 
 resource "aws_s3_bucket" "datalake" {
-  bucket = "datalake-bucket-for-airflow-and-delta-v2"
+  bucket        = "datalake-bucket-for-airflow-and-delta-v2"
   force_destroy = true
 
   tags = {
