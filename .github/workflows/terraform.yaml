@@ -70,9 +70,9 @@ ${process.env.TF_PLAN_OUTPUT}
             owner: context.repo.owner,
             repo: context.repo.repo,
             body: output
-          })
-      env:
-        TF_PLAN_OUTPUT: ${{ steps.plan.outputs.stdout }}
+          });
+        env:
+          TF_PLAN_OUTPUT: ${{ steps.plan.outputs.stdout }}
 
     - name: Terraform Apply
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
