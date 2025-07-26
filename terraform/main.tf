@@ -28,10 +28,6 @@ resource "aws_instance" "airflow_vm" {
   ami           = data.aws_ami.ubuntu.id
   instance_type = "t3.micro"
 
-  lifecycle {
-    create_before_destroy = true
-  }
-
   tags = {
     Name = "Airflow VM"
   }
