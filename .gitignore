@@ -1,0 +1,20 @@
+# Ignore Terraform .terraform directory
+.terraform/
+
+# Ignore Terraform state files
+*.tfstate
+*.tfstate.backup
+
+# Ignore Airflow environment files
+.env
+
+# Ignore Python virtual environments
+virtualenv/
+v_env/
+venv/
+
+# Ignore local IDE files
+.idea/
+.vscode/
+
+
