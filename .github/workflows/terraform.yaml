@@ -4,9 +4,13 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'terraform/**'
   pull_request:
     branches:
       - main
+    paths:
+      - 'terraform/**'
 
     # Removed invalid YAML and misplaced code block here
 
@@ -71,10 +75,8 @@ jobs:
         TF_PLAN_OUTPUT: ${{ steps.plan.outputs.stdout }}
 
 
-    - name: Terraform Apply
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      run: terraform apply -auto-approve
-      working-directory: ./terraform
+
+
 
     - name: Terraform Apply
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
