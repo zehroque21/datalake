@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DataLake AWS - Plataforma de Engenharia de Dados</title>
+    <title>DataLake AWS - Data Engineering Platform</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -281,6 +281,54 @@
             .flow-arrow {
                 transform: rotate(90deg);
             }
+
+            .section {
+                padding: 60px 0;
+            }
+
+            .section h2 {
+                font-size: 2rem;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .architecture {
+                padding: 2rem;
+            }
+
+            .creator-section {
+                padding: 2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 15px;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .cta-button {
+                padding: 12px 24px;
+                font-size: 0.9rem;
+            }
+
+            .feature-card {
+                padding: 1.5rem;
+            }
+
+            .feature-icon {
+                font-size: 2.5rem;
+            }
         }
     </style>
 </head>
@@ -291,9 +339,9 @@
                 <i class="fas fa-database"></i> DataLake AWS
             </div>
             <ul class="nav-links">
-                <li><a href="#overview">Visão Geral</a></li>
-                <li><a href="#architecture">Arquitetura</a></li>
-                <li><a href="#creator">Criador</a></li>
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#creator">Creator</a></li>
                 <li><a href="https://github.com/zehroque21/datalake" target="_blank">GitHub</a></li>
             </ul>
         </nav>
@@ -302,9 +350,9 @@
     <section class="hero">
         <div class="container">
             <h1>DataLake AWS</h1>
-            <p>Plataforma moderna de engenharia de dados com Apache Airflow e Delta Lake, provisionada automaticamente na AWS</p>
+            <p>Modern data engineering platform with Apache Airflow and Delta Lake, automatically provisioned on AWS</p>
             <a href="https://github.com/zehroque21/datalake" class="cta-button" target="_blank">
-                <i class="fab fa-github"></i> Ver no GitHub
+                <i class="fab fa-github"></i> View on GitHub
             </a>
         </div>
     </section>
@@ -312,9 +360,9 @@
     <main class="main-content">
         <section id="overview" class="section">
             <div class="container">
-                <h2>Visão Geral</h2>
+                <h2>Overview</h2>
                 <p style="text-align: center; font-size: 1.1rem; margin-bottom: 3rem; color: #666; max-width: 800px; margin-left: auto; margin-right: auto;">
-                    Uma solução completa de datalake que combina as melhores práticas de engenharia de dados com infraestrutura como código, oferecendo um ambiente robusto para processamento e análise de dados em escala.
+                    A complete datalake solution that combines data engineering best practices with infrastructure as code, providing a robust environment for data processing and analysis at scale.
                 </p>
 
                 <div class="features">
@@ -323,7 +371,7 @@
                             <i class="fas fa-wind"></i>
                         </div>
                         <h3>Apache Airflow</h3>
-                        <p>Orquestração avançada de pipelines de dados com interface web intuitiva e monitoramento em tempo real.</p>
+                        <p>Advanced data pipeline orchestration with intuitive web interface and real-time monitoring.</p>
                     </div>
 
                     <div class="feature-card">
@@ -331,7 +379,7 @@
                             <i class="fas fa-layer-group"></i>
                         </div>
                         <h3>Delta Lake</h3>
-                        <p>Armazenamento de dados confiável com controle de versão, transações ACID e otimizações de performance.</p>
+                        <p>Reliable data storage with version control, ACID transactions, and performance optimizations.</p>
                     </div>
 
                     <div class="feature-card">
@@ -339,23 +387,23 @@
                             <i class="fas fa-cloud-upload-alt"></i>
                         </div>
                         <h3>AWS S3</h3>
-                        <p>Armazenamento escalável e durável para dados brutos e processados com alta disponibilidade.</p>
+                        <p>Scalable and durable storage for raw and processed data with high availability.</p>
                     </div>
 
                     <div class="feature-card">
                         <div class="feature-icon">
                             <i class="fas fa-server"></i>
                         </div>
-                        <h3>EC2 Otimizada</h3>
-                        <p>Instância EC2 configurada automaticamente com todas as dependências necessárias para processamento de dados.</p>
+                        <h3>Optimized EC2</h3>
+                        <p>EC2 instance automatically configured with all necessary dependencies for data processing.</p>
                     </div>
 
                     <div class="feature-card">
                         <div class="feature-icon">
                             <i class="fas fa-code-branch"></i>
                         </div>
-                        <h3>CI/CD Integrado</h3>
-                        <p>Deploy automatizado via GitHub Actions com Terraform para infraestrutura como código.</p>
+                        <h3>Integrated CI/CD</h3>
+                        <p>Automated deployment via GitHub Actions with Terraform for infrastructure as code.</p>
                     </div>
 
                     <div class="feature-card">
@@ -363,7 +411,7 @@
                             <i class="fas fa-chart-line"></i>
                         </div>
                         <h3>Analytics Ready</h3>
-                        <p>Ambiente preparado para análises avançadas com Python, Spark e ferramentas de visualização.</p>
+                        <p>Environment prepared for advanced analytics with Python, Spark, and visualization tools.</p>
                     </div>
                 </div>
             </div>
@@ -372,7 +420,7 @@
         <section id="architecture" class="section">
             <div class="container">
                 <div class="architecture">
-                    <h3><i class="fas fa-sitemap"></i> Arquitetura da Solução</h3>
+                    <h3><i class="fas fa-sitemap"></i> Solution Architecture</h3>
                     
                     <div class="flow-diagram">
                         <div class="flow-item">
@@ -388,7 +436,7 @@
                         <div class="flow-item">
                             <i class="fas fa-hammer" style="font-size: 2rem; color: #ff6b35; margin-bottom: 0.5rem;"></i>
                             <h4>Terraform</h4>
-                            <p>Infraestrutura como Código</p>
+                            <p>Infrastructure as Code</p>
                         </div>
                         
                         <div class="flow-arrow">
@@ -413,12 +461,12 @@
                     </div>
 
                     <div style="margin-top: 2rem; padding: 2rem; background: white; border-radius: 10px;">
-                        <h4 style="margin-bottom: 1rem; color: #333;">Fluxo de Dados:</h4>
+                        <h4 style="margin-bottom: 1rem; color: #333;">Data Flow:</h4>
                         <ol style="color: #666; line-height: 1.8;">
-                            <li><strong>Ingestão:</strong> Dados são coletados de diversas fontes através de pipelines do Airflow</li>
-                            <li><strong>Processamento:</strong> Transformações e limpeza de dados usando Python e Spark</li>
-                            <li><strong>Armazenamento:</strong> Dados processados são salvos no formato Delta Lake no S3</li>
-                            <li><strong>Análise:</strong> Dados estão prontos para consultas e análises avançadas</li>
+                            <li><strong>Ingestion:</strong> Data is collected from various sources through Airflow pipelines</li>
+                            <li><strong>Processing:</strong> Data transformation and cleaning using Python and Spark</li>
+                            <li><strong>Storage:</strong> Processed data is saved in Delta Lake format on S3</li>
+                            <li><strong>Analysis:</strong> Data is ready for queries and advanced analytics</li>
                         </ol>
                     </div>
                 </div>
@@ -430,10 +478,10 @@
                 <div class="creator-section">
                     <div class="creator-content">
                         <div class="creator-info">
-                            <h3><i class="fas fa-user-circle"></i> Sobre o Criador</h3>
-                            <p><strong>Amado Roque</strong> é um engenheiro de dados especializado em soluções de big data e analytics, com vasta experiência em arquiteturas de dados modernas e tecnologias de nuvem.</p>
+                            <h3><i class="fas fa-user-circle"></i> About the Creator</h3>
+                            <p><strong>Amado Roque</strong> is a data engineer specialized in big data and analytics solutions, with extensive experience in modern data architectures and cloud technologies.</p>
                             
-                            <p>Com formação sólida em engenharia e pós-graduação em Business Intelligence, Amado combina conhecimento técnico profundo com visão estratégica de negócios para criar soluções de dados que geram valor real.</p>
+                            <p>With a solid engineering background and postgraduate studies in Business Intelligence, Amado combines deep technical knowledge with strategic business vision to create data solutions that generate real value.</p>
                             
                             <div class="skills">
                                 <span class="skill-tag">Python</span>
@@ -460,7 +508,7 @@
                             <div style="background: rgba(255, 255, 255, 0.1); padding: 2rem; border-radius: 15px; backdrop-filter: blur(10px);">
                                 <i class="fas fa-quote-left" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
                                 <p style="font-size: 1.2rem; font-style: italic; margin-bottom: 1rem;">
-                                    "Transformar dados em insights acionáveis é mais do que tecnologia - é sobre criar valor e impacto real nos negócios."
+                                    "Transforming data into actionable insights is more than technology - it's about creating real value and business impact."
                                 </p>
                                 <p style="font-weight: 600;">- Amado Roque</p>
                             </div>
@@ -473,7 +521,7 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2025 DataLake AWS. Desenvolvido com <i class="fas fa-heart" style="color: #ff6b6b;"></i> por Amado Roque</p>
+            <p>&copy; 2025 DataLake AWS. Developed with <i class="fas fa-heart" style="color: #ff6b6b;"></i> by Amado Roque</p>
         </div>
     </footer>
 
