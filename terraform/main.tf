@@ -253,15 +253,3 @@ data "aws_s3_bucket" "datalake" {
   bucket = "datalake-bucket-for-airflow-and-delta-v2"
 }
 
-# CloudWatch Log Group for monitoring
-resource "aws_cloudwatch_log_group" "airflow_logs" {
-  name              = "/aws/ec2/airflow"
-  retention_in_days = 30
-
-  tags = {
-    Name        = "airflow-logs"
-    Environment = "production"
-    Purpose     = "data-engineering"
-  }
-}
-

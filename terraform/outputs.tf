@@ -33,11 +33,6 @@ output "bucket_arn" {
   value       = data.aws_s3_bucket.datalake.arn
 }
 
-output "cloudwatch_log_group" {
-  description = "CloudWatch log group for monitoring"
-  value       = aws_cloudwatch_log_group.airflow_logs.name
-}
-
 output "access_instructions" {
   description = "Instructions for secure access to the instance"
   value       = <<-EOT
