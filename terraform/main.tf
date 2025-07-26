@@ -158,17 +158,17 @@ data "aws_ami" "ubuntu" {
 
 # EC2 Instance with security improvements
 resource "aws_instance" "airflow_vm" {
-  ami                     = data.aws_ami.ubuntu.id
-  instance_type           = "t3.micro"
-  vpc_security_group_ids  = [aws_security_group.airflow_sg.id]
-  iam_instance_profile    = aws_iam_instance_profile.airflow_profile.name
-  subnet_id               = data.aws_subnets.default.ids[0]
-  
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = "t3.micro"
+  vpc_security_group_ids = [aws_security_group.airflow_sg.id]
+  iam_instance_profile   = aws_iam_instance_profile.airflow_profile.name
+  subnet_id              = data.aws_subnets.default.ids[0]
+
   # Security configurations
-  monitoring                          = true
-  disable_api_termination            = false
+  monitoring                           = true
+  disable_api_termination              = false
   instance_initiated_shutdown_behavior = "stop"
-  
+
   # No key pair - access via Systems Manager Session Manager only
   # key_name = null  # Explicitly no SSH key
 
@@ -178,7 +178,7 @@ resource "aws_instance" "airflow_vm" {
     volume_size           = 20
     encrypted             = true
     delete_on_termination = true
-    
+
     tags = {
       Name        = "airflow-root-volume"
       Environment = "production"

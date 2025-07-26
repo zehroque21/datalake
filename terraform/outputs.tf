@@ -40,7 +40,7 @@ output "cloudwatch_log_group" {
 
 output "access_instructions" {
   description = "Instructions for secure access to the instance"
-  value = <<-EOT
+  value       = <<-EOT
     SECURE ACCESS INSTRUCTIONS:
     
     This instance has NO SSH access for security reasons.
