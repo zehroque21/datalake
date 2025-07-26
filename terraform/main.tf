@@ -45,3 +45,5 @@ resource "aws_s3_bucket" "datalake" {
     Name = "Datalake Bucket"
   }
 }
+
+
