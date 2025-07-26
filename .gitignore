@@ -1,20 +1,114 @@
-# Ignore Terraform .terraform directory
+# Terraform files
 .terraform/
-
-# Ignore Terraform state files
+.terraform.lock.hcl
 *.tfstate
 *.tfstate.backup
+*.tfplan
+*.tfvars
+terraform.tfvars
 
-# Ignore Airflow environment files
+# AWS credentials and config
+.aws/
+aws-credentials.txt
+credentials.txt
+
+# Environment files
 .env
+.env.local
+.env.production
+.env.staging
+*.env
 
-# Ignore Python virtual environments
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
 virtualenv/
 v_env/
-venv/
+airflow-env/
 
-# Ignore local IDE files
+# Airflow
+airflow.cfg
+airflow.db
+logs/
+dags/__pycache__/
+plugins/__pycache__/
+webserver_config.py
+
+# IDE files
 .idea/
 .vscode/
+*.swp
+*.swo
+*~
 
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# SSH keys
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+
+# Secrets and sensitive data
+secrets/
+*.secret
+*.secrets
+config.json
+settings.json
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup files
+*.bak
+*.backup
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
 
