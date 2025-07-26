@@ -26,9 +26,9 @@ data "aws_subnets" "default" {
 
 # Security Group for Airflow VM - Restrictive by default
 resource "aws_security_group" "airflow_sg" {
-  name_description = "Security group for Airflow VM - No SSH access"
-  description      = "Restrictive security group for Airflow VM"
-  vpc_id           = data.aws_vpc.default.id
+  name        = "airflow-security-group"
+  description = "Restrictive security group for Airflow VM - No SSH access"
+  vpc_id      = data.aws_vpc.default.id
 
   # Allow outbound internet access for package installation and updates
   egress {
