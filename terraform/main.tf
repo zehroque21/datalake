@@ -162,18 +162,10 @@ echo "$(date): Installing Apache Airflow"
 PYTHON_VERSION=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
 echo "$(date): Using Python version: $PYTHON_VERSION"
 
-# Install Airflow with explicit version pinning and no-deps to avoid conflicts
-echo "$(date): Installing Airflow 2.8.1 with strict version control"
-pip install --no-deps "apache-airflow==2.8.1" || {
-    echo "$(date): ERROR: Failed to install Apache Airflow core"
-    exit 1
-}
-
-# Install dependencies with constraints
-echo "$(date): Installing Airflow dependencies with constraints"
-pip install --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.8.1/constraints-$${PYTHON_VERSION}.txt" \
-    "apache-airflow[celery,postgres,mysql,redis]==2.8.1" || {
-    echo "$(date): ERROR: Failed to install Airflow dependencies"
+# Install Airflow with proper constraints to ensure all dependencies are included
+echo "$(date): Installing Airflow 2.8.1 with all required dependencies"
+pip install "apache-airflow==2.8.1" --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.8.1/constraints-$${PYTHON_VERSION}.txt" || {
+    echo "$(date): ERROR: Failed to install Apache Airflow"
     exit 1
 }
 
