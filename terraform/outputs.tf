@@ -20,7 +20,7 @@ output "security_group_id" {
 
 output "iam_role_arn" {
   description = "ARN of the IAM role for the EC2 instance"
-  value       = aws_iam_role.airflow_ec2_role.arn
+  value       = data.aws_iam_role.airflow_ec2_role.arn
 }
 
 output "bucket_name" {

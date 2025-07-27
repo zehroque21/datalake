@@ -84,71 +84,19 @@ resource "aws_security_group" "airflow_sg" {
   }
 }
 
-# IAM Role for EC2 instance to access S3 and Systems Manager
-resource "aws_iam_role" "airflow_ec2_role" {
+# IAM Role for EC2 instance (reference existing role)
+data "aws_iam_role" "airflow_ec2_role" {
   name = "airflow-ec2-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-      }
-    ]
-  })
-
-  tags = {
-    Name        = "airflow-ec2-role"
-    Environment = "production"
-    Purpose     = "data-engineering"
-  }
 }
 
-# IAM Policy for S3 access (least privilege)
-resource "aws_iam_policy" "airflow_s3_policy" {
-  name        = "airflow-s3-access"
-  description = "Policy for Airflow to access specific S3 bucket"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject",
-          "s3:ListBucket"
-        ]
-        Resource = [
-          data.aws_s3_bucket.datalake.arn,
-          "${data.aws_s3_bucket.datalake.arn}/*"
-        ]
-      }
-    ]
-  })
+# IAM Policy for S3 access (reference existing policy)
+data "aws_iam_policy" "airflow_s3_policy" {
+  name = "airflow-s3-access"
 }
 
-# Attach S3 policy to role
-resource "aws_iam_role_policy_attachment" "airflow_s3_attach" {
-  role       = aws_iam_role.airflow_ec2_role.name
-  policy_arn = aws_iam_policy.airflow_s3_policy.arn
-}
-
-# Attach AWS managed policy for Systems Manager (for secure access)
-resource "aws_iam_role_policy_attachment" "airflow_ssm_attach" {
-  role       = aws_iam_role.airflow_ec2_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
-}
-
-# IAM Instance Profile
-resource "aws_iam_instance_profile" "airflow_profile" {
+# IAM Instance Profile (reference existing profile)
+data "aws_iam_instance_profile" "airflow_profile" {
   name = "airflow-instance-profile"
-  role = aws_iam_role.airflow_ec2_role.name
 }
 
 # Get latest Ubuntu AMI
@@ -170,7 +118,7 @@ resource "aws_instance" "airflow_vm" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = "t3.micro"
   vpc_security_group_ids = [aws_security_group.airflow_sg.id]
-  iam_instance_profile   = aws_iam_instance_profile.airflow_profile.name
+  iam_instance_profile   = data.aws_iam_instance_profile.airflow_profile.name
   subnet_id              = data.aws_subnets.default.ids[0]
 
   # Security configurations
