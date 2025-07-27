@@ -196,7 +196,6 @@ run_cmd "ufw default allow outgoing"
 # Install Airflow as airflow user
 log "Starting Airflow installation as airflow user"
 sudo -u airflow bash << 'AIRFLOW_INSTALL'
-set -e
 cd /home/airflow
 
 echo "$(date): Creating Python virtual environment"
@@ -267,10 +266,32 @@ AIRFLOW_CFG
 
 chmod 600 $AIRFLOW_HOME/airflow.cfg
 
+echo "$(date): Creating startup scripts for systemd"
+# Create webserver startup script
+cat > /home/airflow/start-webserver.sh << 'WEBSERVER_SCRIPT'
+#!/bin/bash
+cd /home/airflow
+source airflow-env/bin/activate
+export AIRFLOW_HOME=/home/airflow/airflow
+exec airflow webserver --port 8080
+WEBSERVER_SCRIPT
+
+# Create scheduler startup script
+cat > /home/airflow/start-scheduler.sh << 'SCHEDULER_SCRIPT'
+#!/bin/bash
+cd /home/airflow
+source airflow-env/bin/activate
+export AIRFLOW_HOME=/home/airflow/airflow
+exec airflow scheduler
+SCHEDULER_SCRIPT
+
+chmod +x /home/airflow/start-webserver.sh
+chmod +x /home/airflow/start-scheduler.sh
+
 echo "$(date): Airflow installation completed successfully"
 AIRFLOW_INSTALL
 
-# Create systemd services
+# Create systemd services with proper environment setup
 log "Creating systemd services"
 cat > /etc/systemd/system/airflow-webserver.service << 'WEBSERVER_SERVICE'
 [Unit]
@@ -278,14 +299,15 @@ Description=Airflow webserver daemon
 After=network.target
 
 [Service]
-Environment=AIRFLOW_HOME=/home/airflow/airflow
+Type=simple
 User=airflow
 Group=airflow
-Type=simple
-ExecStart=/home/airflow/airflow-env/bin/airflow webserver --port 8080
+ExecStart=/home/airflow/start-webserver.sh
 Restart=on-failure
 RestartSec=10s
 WorkingDirectory=/home/airflow
+Environment=PATH=/home/airflow/airflow-env/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=AIRFLOW_HOME=/home/airflow/airflow
 
 [Install]
 WantedBy=multi-user.target
@@ -297,14 +319,15 @@ Description=Airflow scheduler daemon
 After=network.target
 
 [Service]
-Environment=AIRFLOW_HOME=/home/airflow/airflow
+Type=simple
 User=airflow
 Group=airflow
-Type=simple
-ExecStart=/home/airflow/airflow-env/bin/airflow scheduler
+ExecStart=/home/airflow/start-scheduler.sh
 Restart=on-failure
 RestartSec=10s
 WorkingDirectory=/home/airflow
+Environment=PATH=/home/airflow/airflow-env/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=AIRFLOW_HOME=/home/airflow/airflow
 
 [Install]
 WantedBy=multi-user.target
