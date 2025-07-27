@@ -146,6 +146,14 @@ resource "aws_instance" "airflow_vm" {
     }
   }
 
+  # IMDSv2 configuration for enhanced security
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required" # Force IMDSv2
+    http_put_response_hop_limit = 1
+    instance_metadata_tags      = "enabled"
+  }
+
   # User data for automatic Airflow installation (fixed and robust)
   user_data = base64encode(<<-EOF
 #!/bin/bash
@@ -206,15 +214,39 @@ echo "$(date): Setting up environment variables"
 export AIRFLOW_HOME=/home/airflow/airflow
 
 echo "$(date): Upgrading pip"
-pip install --upgrade pip
+pip install --upgrade pip || { echo "$(date): ERROR: Failed to upgrade pip"; exit 1; }
 
 echo "$(date): Installing Apache Airflow"
 PYTHON_VERSION=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
-pip install "apache-airflow==2.8.1" --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.8.1/constraints-$${PYTHON_VERSION}.txt"
+echo "$(date): Using Python version: $PYTHON_VERSION"
+
+# Install Airflow with explicit error handling
+pip install "apache-airflow==2.8.1" --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.8.1/constraints-$${PYTHON_VERSION}.txt" || {
+    echo "$(date): ERROR: Failed to install Apache Airflow"
+    exit 1
+}
+
+# Verify Airflow installation
+echo "$(date): Verifying Airflow installation"
+if ! command -v airflow &> /dev/null; then
+    echo "$(date): ERROR: Airflow command not found after installation"
+    exit 1
+fi
+
+# Test Airflow version
+echo "$(date): Testing Airflow installation"
+airflow version || {
+    echo "$(date): ERROR: Airflow version command failed"
+    exit 1
+}
 
 echo "$(date): Installing Airflow providers"
-pip install apache-airflow-providers-amazon
-pip install pandas boto3
+pip install apache-airflow-providers-amazon || {
+    echo "$(date): WARNING: Failed to install AWS provider"
+}
+pip install pandas boto3 || {
+    echo "$(date): WARNING: Failed to install pandas/boto3"
+}
 
 echo "$(date): Creating Airflow directories"
 mkdir -p $AIRFLOW_HOME/dags
@@ -222,7 +254,10 @@ mkdir -p $AIRFLOW_HOME/logs
 mkdir -p $AIRFLOW_HOME/plugins
 
 echo "$(date): Initializing Airflow database"
-airflow db init
+airflow db init || {
+    echo "$(date): ERROR: Failed to initialize Airflow database"
+    exit 1
+}
 
 echo "$(date): Creating admin user"
 airflow users create \
@@ -266,8 +301,29 @@ AIRFLOW_CFG
 
 chmod 600 $AIRFLOW_HOME/airflow.cfg
 
+# Final verification that everything is working
+echo "$(date): Performing final verification"
+airflow version || {
+    echo "$(date): ERROR: Final Airflow verification failed"
+    exit 1
+}
+
+# Test that Airflow can access its configuration
+airflow config list --defaults > /dev/null || {
+    echo "$(date): ERROR: Airflow configuration test failed"
+    exit 1
+}
+
 echo "$(date): Airflow installation completed successfully"
+echo "$(date): Airflow version: $(airflow version)"
 AIRFLOW_INSTALL
+
+# Verify Airflow installation was successful before creating services
+log "Verifying Airflow installation before creating services"
+if ! sudo -u airflow bash -c "cd /home/airflow && source airflow-env/bin/activate && command -v airflow"; then
+    log "ERROR: Airflow installation verification failed"
+    exit 1
+fi
 
 # Create startup scripts for systemd (outside of airflow user context)
 log "Creating startup scripts for systemd"
@@ -352,22 +408,51 @@ log "Checking service status"
 systemctl status airflow-webserver --no-pager || log "Webserver status check failed"
 systemctl status airflow-scheduler --no-pager || log "Scheduler status check failed"
 
-# Final verification
-log "Verifying Airflow installation"
-for i in {1..10}; do
+# Enhanced final verification
+log "Performing enhanced Airflow verification"
+VERIFICATION_FAILED=false
+
+# Check if services are active
+if ! systemctl is-active --quiet airflow-webserver; then
+    log "ERROR: Airflow webserver service is not active"
+    VERIFICATION_FAILED=true
+fi
+
+if ! systemctl is-active --quiet airflow-scheduler; then
+    log "ERROR: Airflow scheduler service is not active"
+    VERIFICATION_FAILED=true
+fi
+
+# Check if Airflow is responding on port 8080
+log "Testing Airflow web interface"
+for i in {1..15}; do
     if curl -f http://localhost:8080/health > /dev/null 2>&1; then
         log "SUCCESS: Airflow is responding on port 8080"
         break
     else
-        log "Attempt $i/10: Waiting for Airflow to respond"
+        log "Attempt $i/15: Waiting for Airflow to respond"
+        if [ $i -eq 15 ]; then
+            log "ERROR: Airflow failed to respond after 15 attempts"
+            VERIFICATION_FAILED=true
+        fi
         sleep 10
     fi
 done
 
-log "=== AIRFLOW INSTALLATION COMPLETED ==="
-log "Access Airflow at http://localhost:8080"
-log "Username: admin | Password: admin123"
-log "Credentials saved in: /home/airflow/admin_credentials.txt"
+# Final status report
+if [ "$VERIFICATION_FAILED" = true ]; then
+    log "=== AIRFLOW INSTALLATION FAILED ==="
+    log "Some verification checks failed. Check logs above for details."
+    log "Manual troubleshooting may be required."
+    exit 1
+else
+    log "=== AIRFLOW INSTALLATION COMPLETED SUCCESSFULLY ==="
+    log "All verification checks passed!"
+    log "Access Airflow at http://localhost:8080"
+    log "Username: admin | Password: admin123"
+    log "Credentials saved in: /home/airflow/admin_credentials.txt"
+    log "Use AWS Session Manager for secure access"
+fi
 
 EOF
   )
