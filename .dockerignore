@@ -1,0 +1,14 @@
+# Ignorar arquivos desnecessários no build Docker
+.git
+.gitignore
+*.md
+terraform/
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl
+node_modules/
+*.log
+.DS_Store
+Thumbs.db
+

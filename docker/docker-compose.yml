@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  airflow-test:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: airflow-local-test
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../scripts:/scripts:ro
+      - airflow-logs:/var/log
+      - airflow-data:/home/airflow
+    environment:
+      - AIRFLOW_HOME=/home/airflow/airflow
+    tty: true
+    stdin_open: true
+    command: /bin/bash
+
+volumes:
+  airflow-logs:
+  airflow-data:
+
