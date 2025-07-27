@@ -24,58 +24,9 @@ data "aws_subnets" "default" {
   }
 }
 
-# Security Group for Airflow VM - Restrictive by default
-resource "aws_security_group" "airflow_sg" {
-  name        = "airflow-security-group-stable"
-  description = "Restrictive security group for Airflow VM - No SSH access"
-  vpc_id      = data.aws_vpc.default.id
-
-  # Allow outbound internet access for package installation and updates
-  egress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "HTTP outbound for package installation"
-  }
-
-  egress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "HTTPS outbound for package installation"
-  }
-
-  # Allow DNS resolution
-  egress {
-    from_port   = 53
-    to_port     = 53
-    protocol    = "udp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "DNS resolution"
-  }
-
-  # Allow Airflow web UI access from specific IP (conditional and configurable)
-  dynamic "ingress" {
-    for_each = var.enable_airflow_web_access ? [1] : []
-    content {
-      from_port   = 8080
-      to_port     = 8080
-      protocol    = "tcp"
-      cidr_blocks = [var.allowed_ip_for_airflow]
-      description = "Airflow web UI access from allowed IP"
-    }
-  }
-
-  # NO SSH ACCESS - Security best practice
-  # SSH access should be managed through AWS Systems Manager Session Manager
-
-  tags = {
-    Name        = "airflow-security-group"
-    Environment = "production"
-    Purpose     = "data-engineering"
-  }
+# Security Group for Airflow VM - Reference existing
+data "aws_security_group" "airflow_sg" {
+  name = "airflow-security-group-stable"
 }
 
 # IAM Role for EC2 instance (reference existing role)
@@ -111,7 +62,7 @@ data "aws_ami" "ubuntu" {
 resource "aws_instance" "airflow_vm" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.instance_type
-  vpc_security_group_ids = [aws_security_group.airflow_sg.id]
+  vpc_security_group_ids = [data.aws_security_group.airflow_sg.id]
   iam_instance_profile   = data.aws_iam_instance_profile.airflow_profile.name
   subnet_id              = data.aws_subnets.default.ids[0]
 

@@ -15,7 +15,7 @@ output "instance_state" {
 
 output "security_group_id" {
   description = "ID of the security group"
-  value       = aws_security_group.airflow_sg.id
+  value       = data.aws_security_group.airflow_sg.id
 }
 
 output "iam_role_arn" {
