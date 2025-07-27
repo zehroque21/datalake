@@ -4,11 +4,20 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 4.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.1"
+    }
   }
 }
 
 provider "aws" {
   region = "us-east-1"
+}
+
+# Generate random suffix for resource names to avoid conflicts
+resource "random_id" "sg_suffix" {
+  byte_length = 4
 }
 
 # Get default VPC
@@ -26,7 +35,7 @@ data "aws_subnets" "default" {
 
 # Security Group for Airflow VM - Restrictive by default
 resource "aws_security_group" "airflow_sg" {
-  name        = "airflow-security-group"
+  name        = "airflow-security-group-${random_id.sg_suffix.hex}"
   description = "Restrictive security group for Airflow VM - No SSH access"
   vpc_id      = data.aws_vpc.default.id
 
