@@ -97,7 +97,7 @@ resource "aws_instance" "airflow_vm" {
   }
 
   # User data for automatic Airflow installation (using external script)
-  user_data = base64encode(templatefile("${path.module}/../scripts/install_airflow_v2.sh", {}))
+  user_data = base64encode(templatefile("${path.module}/../scripts/install_airflow.sh", {}))
 
   tags = {
     Name        = "Airflow VM"

@@ -1,110 +1,152 @@
 #!/bin/bash
 
-# Secure Airflow Installation Script
-# This script should be run on the EC2 instance via Systems Manager Session Manager
+# Airflow 2.8.1 Installation Script - Robust Version
+# This script ensures Airflow 2.8.1 is installed correctly with all dependencies
 
-set -e  # Exit on any error
+# Log all output for debugging
+exec > >(tee /var/log/airflow-install.log) 2>&1
+echo "$(date): Starting Airflow 2.8.1 installation script"
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+# Function to log with timestamp
+log() {
+    echo "$(date): $1"
+}
 
-echo -e "${GREEN}Starting secure Airflow installation...${NC}"
+# Function to run commands with error handling
+run_cmd() {
+    log "Running: $1"
+    if eval "$1"; then
+        log "SUCCESS: $1"
+        return 0
+    else
+        log "ERROR: Failed to run: $1"
+        return 1
+    fi
+}
 
-# Check if running as root
-if [[ $EUID -eq 0 ]]; then
-   echo -e "${RED}This script should not be run as root for security reasons${NC}"
-   echo "Please run as the 'airflow' user or create one first"
-   exit 1
-fi
+log "=== AIRFLOW 2.8.1 INSTALLATION STARTING ==="
 
-# Create airflow user if it doesn't exist
-if ! id "airflow" &>/dev/null; then
-    echo -e "${YELLOW}Creating airflow user...${NC}"
-    sudo useradd -m -s /bin/bash airflow
-    sudo usermod -aG sudo airflow
-fi
+# Update system
+log "Updating system packages"
+run_cmd "apt-get update -y"
+run_cmd "apt-get upgrade -y"
 
-# Switch to airflow user if not already
-if [[ $(whoami) != "airflow" ]]; then
-    echo -e "${YELLOW}Switching to airflow user...${NC}"
-    sudo -u airflow bash "$0" "$@"
-    exit $?
-fi
+# Install essential packages
+log "Installing essential packages"
+run_cmd "apt-get install -y python3 python3-pip python3-venv build-essential libssl-dev libffi-dev python3-dev net-tools curl wget git"
 
-# Set up environment variables
-export AIRFLOW_HOME=/home/airflow/airflow
-export AIRFLOW_VERSION=2.8.1
-export PYTHON_VERSION="$(python3 --version | cut -d " " -f 2 | cut -d "." -f 1-2)"
-export CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-${PYTHON_VERSION}.txt"
+# Create airflow user
+log "Creating airflow user"
+run_cmd "useradd -m -s /bin/bash airflow" || log "User airflow may already exist"
+run_cmd "usermod -aG sudo airflow"
 
-echo -e "${GREEN}Setting up Airflow environment...${NC}"
-echo "AIRFLOW_HOME: $AIRFLOW_HOME"
-echo "AIRFLOW_VERSION: $AIRFLOW_VERSION"
-echo "PYTHON_VERSION: $PYTHON_VERSION"
+# Configure firewall
+log "Configuring basic firewall"
+run_cmd "ufw --force enable"
+run_cmd "ufw default deny incoming"
+run_cmd "ufw default allow outgoing"
 
-# Create airflow directory
-mkdir -p $AIRFLOW_HOME
-cd $AIRFLOW_HOME
+# Install Airflow as airflow user
+log "Starting Airflow installation as airflow user"
+sudo -u airflow bash << 'AIRFLOW_INSTALL'
+cd /home/airflow
 
-# Create and activate virtual environment
-echo -e "${YELLOW}Creating Python virtual environment...${NC}"
+echo "$(date): Creating Python virtual environment"
 python3 -m venv airflow-env
 source airflow-env/bin/activate
 
-# Upgrade pip
-pip install --upgrade pip
+echo "$(date): Setting up environment variables"
+export AIRFLOW_HOME=/home/airflow/airflow
 
-# Install Airflow with specific providers
-echo -e "${YELLOW}Installing Apache Airflow...${NC}"
-pip install "apache-airflow==${AIRFLOW_VERSION}" --constraint "${CONSTRAINT_URL}"
+echo "$(date): Upgrading pip"
+pip install --upgrade pip || { echo "$(date): ERROR: Failed to upgrade pip"; exit 1; }
 
-# Install additional providers for AWS and data processing
-echo -e "${YELLOW}Installing Airflow providers...${NC}"
-pip install apache-airflow-providers-amazon
-pip install apache-airflow-providers-postgres
-pip install apache-airflow-providers-http
+echo "$(date): Installing Apache Airflow 2.8.1 with robust version control"
+PYTHON_VERSION=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+echo "$(date): Using Python version: $PYTHON_VERSION"
 
-# Install data processing libraries
-echo -e "${YELLOW}Installing data processing libraries...${NC}"
-pip install pandas
-pip install boto3
-pip install delta-spark
-pip install pyspark
+# Clear any existing airflow installations
+pip uninstall apache-airflow apache-airflow-core -y || true
 
-# Initialize Airflow database
-echo -e "${YELLOW}Initializing Airflow database...${NC}"
-airflow db init
+# Install specific version with working constraint file (using 3.11 constraints that work)
+echo "$(date): Installing Airflow 2.8.1 with working constraint file"
+pip install --no-cache-dir \
+    "apache-airflow==2.8.1" \
+    --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.8.1/constraints-3.11.txt" \
+    --force-reinstall || {
+    echo "$(date): ERROR: Failed to install Apache Airflow 2.8.1"
+    exit 1
+}
 
-# Create admin user with secure password
-echo -e "${YELLOW}Creating Airflow admin user...${NC}"
+# Verify specific version was installed
+echo "$(date): Verifying Airflow 2.8.1 installation"
+INSTALLED_VERSION=$(pip show apache-airflow | grep Version | cut -d' ' -f2)
+if [[ "$INSTALLED_VERSION" != "2.8.1" ]]; then
+    echo "$(date): ERROR: Wrong Airflow version installed: $INSTALLED_VERSION (expected 2.8.1)"
+    exit 1
+fi
+
+# Verify executable exists
+if [[ ! -f "/home/airflow/airflow-env/bin/airflow" ]]; then
+    echo "$(date): ERROR: Airflow executable not found at expected location"
+    exit 1
+fi
+
+echo "$(date): Airflow 2.8.1 successfully installed and verified"
+
+# Test Airflow version
+echo "$(date): Testing Airflow installation"
+airflow version || {
+    echo "$(date): ERROR: Airflow version command failed"
+    exit 1
+}
+
+echo "$(date): Installing Airflow providers"
+pip install apache-airflow-providers-amazon || {
+    echo "$(date): WARNING: Failed to install AWS provider"
+}
+pip install pandas boto3 || {
+    echo "$(date): WARNING: Failed to install pandas/boto3"
+}
+
+echo "$(date): Creating Airflow directories"
+mkdir -p $AIRFLOW_HOME/dags
+mkdir -p $AIRFLOW_HOME/logs  
+mkdir -p $AIRFLOW_HOME/plugins
+
+echo "$(date): Initializing Airflow database"
+airflow db init || {
+    echo "$(date): ERROR: Failed to initialize Airflow database"
+    exit 1
+}
+
+echo "$(date): Creating admin user"
 airflow users create \
     --username admin \
     --firstname Admin \
     --lastname User \
     --role Admin \
     --email admin@example.com \
-    --password $(openssl rand -base64 12)
+    --password admin123
 
-# Create secure Airflow configuration
-echo -e "${YELLOW}Configuring Airflow security settings...${NC}"
-cat > $AIRFLOW_HOME/airflow.cfg << EOF
+echo "$(date): Saving admin credentials"
+echo "Username: admin" > /home/airflow/admin_credentials.txt
+echo "Password: admin123" >> /home/airflow/admin_credentials.txt
+chmod 600 /home/airflow/admin_credentials.txt
+
+echo "$(date): Creating Airflow configuration"
+cat > $AIRFLOW_HOME/airflow.cfg << 'AIRFLOW_CFG'
 [core]
-dags_folder = $AIRFLOW_HOME/dags
-base_log_folder = $AIRFLOW_HOME/logs
-plugins_folder = $AIRFLOW_HOME/plugins
+dags_folder = /home/airflow/airflow/dags
+base_log_folder = /home/airflow/airflow/logs
+plugins_folder = /home/airflow/airflow/plugins
 executor = LocalExecutor
-sql_alchemy_conn = sqlite:///$AIRFLOW_HOME/airflow.db
+sql_alchemy_conn = sqlite:////home/airflow/airflow/airflow.db
 load_examples = False
-security = True
 
 [webserver]
-web_server_host = 127.0.0.1
+web_server_host = 0.0.0.0
 web_server_port = 8080
-secret_key = $(openssl rand -base64 32)
-expose_config = False
 authenticate = True
 auth_backend = airflow.auth.backends.password_auth
 
@@ -113,159 +155,157 @@ catchup_by_default = False
 
 [logging]
 logging_level = INFO
-fab_logging_level = WARN
-
-[secrets]
-backend = airflow.secrets.local_filesystem.LocalFilesystemBackend
 
 [aws]
 region_name = us-east-1
-EOF
+AIRFLOW_CFG
 
-# Create DAGs directory
-mkdir -p $AIRFLOW_HOME/dags
-mkdir -p $AIRFLOW_HOME/logs
-mkdir -p $AIRFLOW_HOME/plugins
+chmod 600 $AIRFLOW_HOME/airflow.cfg
 
-# Create sample secure DAG
-cat > $AIRFLOW_HOME/dags/sample_delta_lake_dag.py << 'EOF'
-from datetime import datetime, timedelta
-from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
-from airflow.providers.amazon.aws.hooks.s3 import S3Hook
-import pandas as pd
-import boto3
-
-default_args = {
-    'owner': 'data-engineering',
-    'depends_on_past': False,
-    'start_date': datetime(2025, 1, 1),
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'retries': 1,
-    'retry_delay': timedelta(minutes=5),
+# Final verification that everything is working
+echo "$(date): Performing final verification"
+airflow version || {
+    echo "$(date): ERROR: Final Airflow verification failed"
+    exit 1
 }
 
-dag = DAG(
-    'sample_delta_lake_pipeline',
-    default_args=default_args,
-    description='Sample Delta Lake data pipeline',
-    schedule_interval=timedelta(days=1),
-    catchup=False,
-    tags=['delta-lake', 'data-engineering'],
-)
+# Test that Airflow can access its configuration
+airflow config list --defaults > /dev/null || {
+    echo "$(date): ERROR: Airflow configuration test failed"
+    exit 1
+}
 
-def process_data():
-    """Sample data processing function"""
-    # Create sample data
-    data = pd.DataFrame({
-        'id': range(1, 101),
-        'value': range(100, 200),
-        'timestamp': pd.date_range('2025-01-01', periods=100, freq='H')
-    })
-    
-    # Process data (example transformation)
-    data['processed_value'] = data['value'] * 2
-    
-    print(f"Processed {len(data)} records")
-    return data.to_dict('records')
+echo "$(date): Airflow installation completed successfully"
+echo "$(date): Airflow version: $(airflow version)"
+AIRFLOW_INSTALL
 
-def upload_to_s3():
-    """Upload processed data to S3"""
-    s3_hook = S3Hook(aws_conn_id='aws_default')
-    bucket_name = 'datalake-bucket-for-airflow-and-delta-v2'
-    
-    # This is a placeholder - in real implementation, you would
-    # write Delta Lake tables here
-    print(f"Would upload data to S3 bucket: {bucket_name}")
+# Verify Airflow installation was successful before creating services
+log "Verifying Airflow installation before creating services"
+if ! sudo -u airflow bash -c "cd /home/airflow && source airflow-env/bin/activate && command -v airflow"; then
+    log "ERROR: Airflow installation verification failed"
+    exit 1
+fi
 
-process_task = PythonOperator(
-    task_id='process_data',
-    python_callable=process_data,
-    dag=dag,
-)
+# Create startup scripts for systemd
+log "Creating startup scripts for systemd"
+cat > /home/airflow/start-webserver.sh << 'WEBSERVER_SCRIPT'
+#!/bin/bash
+cd /home/airflow
+source airflow-env/bin/activate
+export AIRFLOW_HOME=/home/airflow/airflow
+exec airflow webserver --port 8080
+WEBSERVER_SCRIPT
 
-upload_task = PythonOperator(
-    task_id='upload_to_s3',
-    python_callable=upload_to_s3,
-    dag=dag,
-)
+cat > /home/airflow/start-scheduler.sh << 'SCHEDULER_SCRIPT'
+#!/bin/bash
+cd /home/airflow
+source airflow-env/bin/activate
+export AIRFLOW_HOME=/home/airflow/airflow
+exec airflow scheduler
+SCHEDULER_SCRIPT
 
-process_task >> upload_task
-EOF
+chmod +x /home/airflow/start-webserver.sh
+chmod +x /home/airflow/start-scheduler.sh
+chown airflow:airflow /home/airflow/start-*.sh
 
-# Create systemd service for Airflow webserver
-echo -e "${YELLOW}Creating systemd services...${NC}"
-sudo tee /etc/systemd/system/airflow-webserver.service > /dev/null << EOF
+# Create systemd service files
+log "Creating systemd service files"
+cat > /etc/systemd/system/airflow-webserver.service << 'WEBSERVER_SERVICE'
 [Unit]
 Description=Airflow webserver daemon
 After=network.target
 
 [Service]
-Environment=AIRFLOW_HOME=/home/airflow/airflow
+Type=exec
 User=airflow
 Group=airflow
-Type=simple
-ExecStart=/home/airflow/airflow/airflow-env/bin/airflow webserver
-Restart=on-failure
+ExecStart=/home/airflow/start-webserver.sh
+Restart=always
 RestartSec=5s
 PrivateTmp=true
-ProtectSystem=strict
-ProtectHome=true
-NoNewPrivileges=true
 
 [Install]
 WantedBy=multi-user.target
-EOF
+WEBSERVER_SERVICE
 
-# Create systemd service for Airflow scheduler
-sudo tee /etc/systemd/system/airflow-scheduler.service > /dev/null << EOF
+cat > /etc/systemd/system/airflow-scheduler.service << 'SCHEDULER_SERVICE'
 [Unit]
 Description=Airflow scheduler daemon
 After=network.target
 
 [Service]
-Environment=AIRFLOW_HOME=/home/airflow/airflow
+Type=exec
 User=airflow
 Group=airflow
-Type=simple
-ExecStart=/home/airflow/airflow/airflow-env/bin/airflow scheduler
-Restart=on-failure
+ExecStart=/home/airflow/start-scheduler.sh
+Restart=always
 RestartSec=5s
 PrivateTmp=true
-ProtectSystem=strict
-ProtectHome=true
-NoNewPrivileges=true
 
 [Install]
 WantedBy=multi-user.target
-EOF
+SCHEDULER_SERVICE
 
-# Reload systemd and enable services
-sudo systemctl daemon-reload
-sudo systemctl enable airflow-webserver
-sudo systemctl enable airflow-scheduler
+# Enable and start services
+log "Enabling and starting Airflow services"
+run_cmd "systemctl daemon-reload"
+run_cmd "systemctl enable airflow-webserver"
+run_cmd "systemctl enable airflow-scheduler"
+run_cmd "systemctl start airflow-webserver"
+run_cmd "systemctl start airflow-scheduler"
 
-# Start services
-echo -e "${YELLOW}Starting Airflow services...${NC}"
-sudo systemctl start airflow-webserver
-sudo systemctl start airflow-scheduler
+# Wait for services to start
+log "Waiting for services to start"
+sleep 10
 
-# Set proper permissions
-chmod 700 $AIRFLOW_HOME
-chmod 600 $AIRFLOW_HOME/airflow.cfg
+# Verify services are running
+log "Verifying services are running"
+if systemctl is-active --quiet airflow-webserver; then
+    log "SUCCESS: Airflow webserver is running"
+else
+    log "ERROR: Airflow webserver failed to start"
+    systemctl status airflow-webserver
+fi
 
-echo -e "${GREEN}Airflow installation completed successfully!${NC}"
-echo ""
-echo -e "${YELLOW}Important Security Notes:${NC}"
-echo "1. Airflow is configured to run on localhost only (127.0.0.1:8080)"
-echo "2. No external access is allowed for security reasons"
-echo "3. Admin password was randomly generated - check logs for details"
-echo "4. To access Airflow UI, use port forwarding through Session Manager"
-echo ""
-echo -e "${YELLOW}Service Status:${NC}"
-sudo systemctl status airflow-webserver --no-pager -l
-sudo systemctl status airflow-scheduler --no-pager -l
-echo ""
-echo -e "${GREEN}Installation complete! Airflow is running securely.${NC}"
+if systemctl is-active --quiet airflow-scheduler; then
+    log "SUCCESS: Airflow scheduler is running"
+else
+    log "ERROR: Airflow scheduler failed to start"
+    systemctl status airflow-scheduler
+fi
+
+# Test Airflow web interface
+log "Testing Airflow web interface"
+for i in {1..15}; do
+    if curl -s http://localhost:8080/health > /dev/null; then
+        log "SUCCESS: Airflow web interface is responding"
+        break
+    else
+        log "Attempt $i: Airflow web interface not ready, waiting..."
+        sleep 10
+    fi
+    
+    if [ $i -eq 15 ]; then
+        log "ERROR: Airflow failed to respond after 15 attempts"
+        log "=== AIRFLOW INSTALLATION FAILED ==="
+        exit 1
+    fi
+done
+
+# Configure auto-stop at 22:00 UTC (optional)
+log "Configuring auto-stop"
+cat > /usr/local/bin/auto-stop-instance.sh << 'AUTO_STOP'
+#!/bin/bash
+INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+aws ec2 stop-instances --instance-ids $INSTANCE_ID --region us-east-1
+AUTO_STOP
+
+chmod +x /usr/local/bin/auto-stop-instance.sh
+echo "0 22 * * * root /usr/local/bin/auto-stop-instance.sh" >> /etc/crontab
+
+log "=== AIRFLOW INSTALLATION COMPLETED SUCCESSFULLY ==="
+log "Airflow web interface available at: http://localhost:8080"
+log "Username: admin"
+log "Password: admin123"
+log "Instance will auto-stop at 22:00 UTC daily"
 
