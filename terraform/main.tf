@@ -454,6 +454,56 @@ else
     log "Use AWS Session Manager for secure access"
 fi
 
+# Configure auto-stop for cost management
+log "Configuring auto-stop for cost management"
+
+# Install AWS CLI v2 if not already installed (for auto-stop functionality)
+if ! command -v aws &> /dev/null; then
+    log "Installing AWS CLI v2 for auto-stop functionality"
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    unzip awscliv2.zip
+    ./aws/install
+    rm -rf aws awscliv2.zip
+fi
+
+# Create auto-stop script
+log "Creating auto-stop script"
+cat > /usr/local/bin/auto-stop-instance.sh << 'AUTO_STOP_SCRIPT'
+#!/bin/bash
+# Auto-stop script for cost management
+INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/region)
+
+echo "$(date): Auto-stop triggered for instance $INSTANCE_ID in region $REGION"
+
+# Stop the instance
+aws ec2 stop-instances --instance-ids $INSTANCE_ID --region $REGION
+
+echo "$(date): Stop command sent for instance $INSTANCE_ID"
+AUTO_STOP_SCRIPT
+
+chmod +x /usr/local/bin/auto-stop-instance.sh
+
+# Configure cron job for auto-stop at 22:00 (10 PM) daily
+log "Configuring daily auto-stop at 22:00 (10 PM)"
+echo "0 22 * * * /usr/local/bin/auto-stop-instance.sh >> /var/log/auto-stop.log 2>&1" | crontab -
+
+# Create manual stop script for immediate use
+log "Creating manual stop script"
+cat > /usr/local/bin/stop-now.sh << 'STOP_NOW_SCRIPT'
+#!/bin/bash
+echo "Stopping instance immediately..."
+/usr/local/bin/auto-stop-instance.sh
+STOP_NOW_SCRIPT
+
+chmod +x /usr/local/bin/stop-now.sh
+
+log "=== AUTO-STOP CONFIGURATION COMPLETED ==="
+log "Instance will automatically stop at 22:00 (10 PM) daily"
+log "To stop manually: sudo /usr/local/bin/stop-now.sh"
+log "To check auto-stop logs: sudo tail -f /var/log/auto-stop.log"
+log "To disable auto-stop: sudo crontab -r"
+
 EOF
   )
 
