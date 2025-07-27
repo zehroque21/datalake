@@ -37,36 +37,36 @@ if [ ! -f "docker-compose.yml" ]; then
 fi
 
 log "Construindo imagem Docker..."
-docker-compose build
+docker compose build
 
 log "Iniciando container..."
-docker-compose up -d
+docker compose up -d
 
 log "Aguardando container inicializar..."
 sleep 3
 
 log "Executando instalação do Airflow..."
-docker-compose exec airflow-test bash -c "
+docker compose exec airflow-test bash -c "
     echo '🚀 Iniciando instalação do Airflow no container...'
     cd /tmp
     ./install_airflow.sh 2>&1 | tee /var/log/airflow-install.log
 "
 
 # Verificar resultado
-if docker-compose exec airflow-test bash -c "systemctl is-active airflow-webserver" > /dev/null 2>&1; then
+if docker compose exec airflow-test bash -c "systemctl is-active airflow-webserver" > /dev/null 2>&1; then
     log "✅ Airflow instalado com sucesso!"
     log "🌐 Acesse: http://localhost:8080"
     log "👤 Usuário: admin"
     log "🔑 Senha: admin123"
     echo ""
     log "📋 Comandos úteis:"
-    echo "  docker-compose exec airflow-test bash  # Entrar no container"
-    echo "  docker-compose logs -f                 # Ver logs"
-    echo "  docker-compose down                    # Parar container"
+    echo "  docker compose exec airflow-test bash  # Entrar no container"
+    echo "  docker compose logs -f                 # Ver logs"
+    echo "  docker compose down                    # Parar container"
 else
     error "❌ Instalação falhou!"
     warn "📋 Para debugar:"
-    echo "  docker-compose exec airflow-test bash"
+    echo "  docker compose exec airflow-test bash"
     echo "  tail -f /var/log/airflow-install.log"
 fi
 
