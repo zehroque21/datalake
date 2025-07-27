@@ -101,10 +101,7 @@ airflow version || {
     exit 1
 }
 
-echo "$(date): Installing Airflow providers compatible with 2.8.1"
-pip install "apache-airflow-providers-amazon==8.25.0" || {
-    echo "$(date): WARNING: Failed to install AWS provider"
-}
+echo "$(date): Installing only essential packages (no providers to avoid conflicts)"
 pip install pandas boto3 || {
     echo "$(date): WARNING: Failed to install pandas/boto3"
 }
@@ -179,133 +176,55 @@ echo "$(date): Airflow installation completed successfully"
 echo "$(date): Airflow version: $(airflow version)"
 AIRFLOW_INSTALL
 
-# Verify Airflow installation was successful before creating services
-log "Verifying Airflow installation before creating services"
+# Verify Airflow installation was successful
+log "Verifying Airflow installation"
 if ! sudo -u airflow bash -c "cd /home/airflow && source airflow-env/bin/activate && command -v airflow"; then
     log "ERROR: Airflow installation verification failed"
     exit 1
 fi
 
-# Create startup scripts for systemd
-log "Creating startup scripts for systemd"
-cat > /home/airflow/start-webserver.sh << 'WEBSERVER_SCRIPT'
-#!/bin/bash
+log "=== AIRFLOW INSTALLATION COMPLETED SUCCESSFULLY ==="
+log "Airflow web interface will be available at: http://localhost:8080"
+log "Username: admin"
+log "Password: admin123"
+
+# For Docker, we'll start services manually instead of using systemd
+log "Starting Airflow webserver in background"
+sudo -u airflow bash -c "
 cd /home/airflow
 source airflow-env/bin/activate
 export AIRFLOW_HOME=/home/airflow/airflow
-exec airflow webserver --port 8080
-WEBSERVER_SCRIPT
+nohup airflow webserver --port 8080 > /var/log/airflow-webserver.log 2>&1 &
+echo \$! > /var/run/airflow-webserver.pid
+"
 
-cat > /home/airflow/start-scheduler.sh << 'SCHEDULER_SCRIPT'
-#!/bin/bash
+log "Starting Airflow scheduler in background"
+sudo -u airflow bash -c "
 cd /home/airflow
 source airflow-env/bin/activate
 export AIRFLOW_HOME=/home/airflow/airflow
-exec airflow scheduler
-SCHEDULER_SCRIPT
-
-chmod +x /home/airflow/start-webserver.sh
-chmod +x /home/airflow/start-scheduler.sh
-chown airflow:airflow /home/airflow/start-*.sh
-
-# Create systemd service files
-log "Creating systemd service files"
-cat > /etc/systemd/system/airflow-webserver.service << 'WEBSERVER_SERVICE'
-[Unit]
-Description=Airflow webserver daemon
-After=network.target
-
-[Service]
-Type=exec
-User=airflow
-Group=airflow
-ExecStart=/home/airflow/start-webserver.sh
-Restart=always
-RestartSec=5s
-PrivateTmp=true
-
-[Install]
-WantedBy=multi-user.target
-WEBSERVER_SERVICE
-
-cat > /etc/systemd/system/airflow-scheduler.service << 'SCHEDULER_SERVICE'
-[Unit]
-Description=Airflow scheduler daemon
-After=network.target
-
-[Service]
-Type=exec
-User=airflow
-Group=airflow
-ExecStart=/home/airflow/start-scheduler.sh
-Restart=always
-RestartSec=5s
-PrivateTmp=true
-
-[Install]
-WantedBy=multi-user.target
-SCHEDULER_SERVICE
-
-# Enable and start services
-log "Enabling and starting Airflow services"
-run_cmd "systemctl daemon-reload"
-run_cmd "systemctl enable airflow-webserver"
-run_cmd "systemctl enable airflow-scheduler"
-run_cmd "systemctl start airflow-webserver"
-run_cmd "systemctl start airflow-scheduler"
+nohup airflow scheduler > /var/log/airflow-scheduler.log 2>&1 &
+echo \$! > /var/run/airflow-scheduler.pid
+"
 
 # Wait for services to start
 log "Waiting for services to start"
-sleep 10
-
-# Verify services are running
-log "Verifying services are running"
-if systemctl is-active --quiet airflow-webserver; then
-    log "SUCCESS: Airflow webserver is running"
-else
-    log "ERROR: Airflow webserver failed to start"
-    systemctl status airflow-webserver
-fi
-
-if systemctl is-active --quiet airflow-scheduler; then
-    log "SUCCESS: Airflow scheduler is running"
-else
-    log "ERROR: Airflow scheduler failed to start"
-    systemctl status airflow-scheduler
-fi
+sleep 15
 
 # Test Airflow web interface
 log "Testing Airflow web interface"
-for i in {1..15}; do
+for i in {1..10}; do
     if curl -s http://localhost:8080/health > /dev/null; then
         log "SUCCESS: Airflow web interface is responding"
-        break
+        log "=== AIRFLOW READY FOR USE ==="
+        exit 0
     else
         log "Attempt $i: Airflow web interface not ready, waiting..."
         sleep 10
     fi
-    
-    if [ $i -eq 15 ]; then
-        log "ERROR: Airflow failed to respond after 15 attempts"
-        log "=== AIRFLOW INSTALLATION FAILED ==="
-        exit 1
-    fi
 done
 
-# Configure auto-stop at 22:00 UTC (optional)
-log "Configuring auto-stop"
-cat > /usr/local/bin/auto-stop-instance.sh << 'AUTO_STOP'
-#!/bin/bash
-INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
-aws ec2 stop-instances --instance-ids $INSTANCE_ID --region us-east-1
-AUTO_STOP
-
-chmod +x /usr/local/bin/auto-stop-instance.sh
-echo "0 22 * * * root /usr/local/bin/auto-stop-instance.sh" >> /etc/crontab
-
-log "=== AIRFLOW INSTALLATION COMPLETED SUCCESSFULLY ==="
-log "Airflow web interface available at: http://localhost:8080"
-log "Username: admin"
-log "Password: admin123"
-log "Instance will auto-stop at 22:00 UTC daily"
+log "ERROR: Airflow failed to respond after 10 attempts"
+log "Check logs: /var/log/airflow-webserver.log and /var/log/airflow-scheduler.log"
+exit 1
 
