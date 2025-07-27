@@ -68,14 +68,36 @@ echo "$(date): Using Python version: $PYTHON_VERSION"
 # Clear any existing airflow installations
 pip uninstall apache-airflow apache-airflow-core -y || true
 
-# Install specific version with working constraint file (using 3.11 constraints that work)
-echo "$(date): Installing Airflow 2.8.1 with working constraint file"
+# Install Airflow 2.8.1 WITHOUT constraint file to avoid provider conflicts
+echo "$(date): Installing Airflow 2.8.1 WITHOUT constraint file (no providers)"
 pip install --no-cache-dir \
     "apache-airflow==2.8.1" \
-    --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.8.1/constraints-3.11.txt" \
-    --force-reinstall || {
+    --no-deps || {
     echo "$(date): ERROR: Failed to install Apache Airflow 2.8.1"
     exit 1
+}
+
+# Install only essential dependencies manually
+echo "$(date): Installing essential dependencies manually"
+pip install --no-cache-dir \
+    "alembic>=1.6.3,<2.0" \
+    "argcomplete>=1.10" \
+    "attrs>=22.1.0" \
+    "blinker" \
+    "colorlog>=4.0.2,<5.0" \
+    "croniter>=0.3.17" \
+    "flask>=2.2,<2.3" \
+    "gunicorn>=20.1.0" \
+    "jinja2>=3.0.0" \
+    "packaging>=14.0" \
+    "pendulum>=2.1.2,<4.0" \
+    "psutil>=4.2.0" \
+    "python-dateutil>=2.3" \
+    "sqlalchemy>=1.4.28,<2.0" \
+    "tabulate>=0.7.5" \
+    "tenacity>=6.2.0" \
+    "werkzeug>=2.2,<2.3" || {
+    echo "$(date): WARNING: Some dependencies failed to install"
 }
 
 # Verify specific version was installed
@@ -194,8 +216,8 @@ sudo -u airflow bash -c "
 cd /home/airflow
 source airflow-env/bin/activate
 export AIRFLOW_HOME=/home/airflow/airflow
-nohup airflow webserver --port 8080 > /var/log/airflow-webserver.log 2>&1 &
-echo \$! > /var/run/airflow-webserver.pid
+nohup airflow webserver --port 8080 > /home/airflow/airflow-webserver.log 2>&1 &
+echo \$! > /home/airflow/airflow-webserver.pid
 "
 
 log "Starting Airflow scheduler in background"
@@ -203,8 +225,8 @@ sudo -u airflow bash -c "
 cd /home/airflow
 source airflow-env/bin/activate
 export AIRFLOW_HOME=/home/airflow/airflow
-nohup airflow scheduler > /var/log/airflow-scheduler.log 2>&1 &
-echo \$! > /var/run/airflow-scheduler.pid
+nohup airflow scheduler > /home/airflow/airflow-scheduler.log 2>&1 &
+echo \$! > /home/airflow/airflow-scheduler.pid
 "
 
 # Wait for services to start
@@ -225,6 +247,6 @@ for i in {1..10}; do
 done
 
 log "ERROR: Airflow failed to respond after 10 attempts"
-log "Check logs: /var/log/airflow-webserver.log and /var/log/airflow-scheduler.log"
+log "Check logs: /home/airflow/airflow-webserver.log and /home/airflow/airflow-scheduler.log"
 exit 1
 
