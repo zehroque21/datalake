@@ -8,7 +8,7 @@ terraform {
 }
 
 provider "aws" {
-  region = "us-east-1"
+  region = var.aws_region
 }
 
 # Get default VPC
@@ -110,7 +110,7 @@ data "aws_ami" "ubuntu" {
 # EC2 Instance with security improvements
 resource "aws_instance" "airflow_vm" {
   ami                    = data.aws_ami.ubuntu.id
-  instance_type          = "t3.micro"
+  instance_type          = var.instance_type
   vpc_security_group_ids = [aws_security_group.airflow_sg.id]
   iam_instance_profile   = data.aws_iam_instance_profile.airflow_profile.name
   subnet_id              = data.aws_subnets.default.ids[0]
@@ -211,9 +211,18 @@ echo "$(date): Installing Apache Airflow"
 PYTHON_VERSION=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
 echo "$(date): Using Python version: $PYTHON_VERSION"
 
-# Install Airflow with explicit error handling
-pip install "apache-airflow==2.8.1" --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.8.1/constraints-$${PYTHON_VERSION}.txt" || {
-    echo "$(date): ERROR: Failed to install Apache Airflow"
+# Install Airflow with explicit version pinning and no-deps to avoid conflicts
+echo "$(date): Installing Airflow 2.8.1 with strict version control"
+pip install --no-deps "apache-airflow==2.8.1" || {
+    echo "$(date): ERROR: Failed to install Apache Airflow core"
+    exit 1
+}
+
+# Install dependencies with constraints
+echo "$(date): Installing Airflow dependencies with constraints"
+pip install --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.8.1/constraints-$${PYTHON_VERSION}.txt" \
+    "apache-airflow[celery,postgres,mysql,redis]==2.8.1" || {
+    echo "$(date): ERROR: Failed to install Airflow dependencies"
     exit 1
 }
 
@@ -508,6 +517,6 @@ EOF
 
 # S3 Bucket reference (existing bucket)
 data "aws_s3_bucket" "datalake" {
-  bucket = "datalake-bucket-for-airflow-and-delta-v2"
+  bucket = var.bucket_name
 }
 

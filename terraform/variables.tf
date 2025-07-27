@@ -7,13 +7,13 @@ variable "aws_region" {
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string
-  default     = "t2.micro"
+  default     = "t3.micro"
 }
 
 variable "bucket_name" {
   description = "S3 bucket name for the datalake"
   type        = string
-  default     = "datalake-bucket-for-airflow-and-delta"
+  default     = "datalake-bucket-for-airflow-and-delta-v2"
 }
 
 
@@ -31,6 +31,6 @@ variable "allowed_ip_for_airflow" {
 variable "enable_airflow_web_access" {
   description = "Enable web access to Airflow UI (set to false for maximum security)"
   type        = bool
-  default     = true
+  default     = false # SECURITY: Disabled by default - use port forwarding instead
 }
 
