@@ -266,8 +266,11 @@ AIRFLOW_CFG
 
 chmod 600 $AIRFLOW_HOME/airflow.cfg
 
-echo "$(date): Creating startup scripts for systemd"
-# Create webserver startup script
+echo "$(date): Airflow installation completed successfully"
+AIRFLOW_INSTALL
+
+# Create startup scripts for systemd (outside of airflow user context)
+log "Creating startup scripts for systemd"
 cat > /home/airflow/start-webserver.sh << 'WEBSERVER_SCRIPT'
 #!/bin/bash
 cd /home/airflow
@@ -276,7 +279,6 @@ export AIRFLOW_HOME=/home/airflow/airflow
 exec airflow webserver --port 8080
 WEBSERVER_SCRIPT
 
-# Create scheduler startup script
 cat > /home/airflow/start-scheduler.sh << 'SCHEDULER_SCRIPT'
 #!/bin/bash
 cd /home/airflow
@@ -285,11 +287,12 @@ export AIRFLOW_HOME=/home/airflow/airflow
 exec airflow scheduler
 SCHEDULER_SCRIPT
 
-chmod +x /home/airflow/start-webserver.sh
-chmod +x /home/airflow/start-scheduler.sh
-
-echo "$(date): Airflow installation completed successfully"
-AIRFLOW_INSTALL
+# Set proper ownership and permissions
+log "Setting script permissions and ownership"
+run_cmd "chown airflow:airflow /home/airflow/start-webserver.sh"
+run_cmd "chown airflow:airflow /home/airflow/start-scheduler.sh"
+run_cmd "chmod +x /home/airflow/start-webserver.sh"
+run_cmd "chmod +x /home/airflow/start-scheduler.sh"
 
 # Create systemd services with proper environment setup
 log "Creating systemd services"
