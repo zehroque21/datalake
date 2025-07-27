@@ -65,14 +65,17 @@ resource "aws_security_group" "airflow_sg" {
     description = "DNS resolution"
   }
 
-  # Allow Airflow web UI access (only if needed - commented out by default)
-  # ingress {
-  #   from_port   = 8080
-  #   to_port     = 8080
-  #   protocol    = "tcp"
-  #   cidr_blocks = ["YOUR_IP/32"]  # Replace with your specific IP
-  #   description = "Airflow web UI access"
-  # }
+  # Allow Airflow web UI access from specific IP (conditional and configurable)
+  dynamic "ingress" {
+    for_each = var.enable_airflow_web_access ? [1] : []
+    content {
+      from_port   = 8080
+      to_port     = 8080
+      protocol    = "tcp"
+      cidr_blocks = [var.allowed_ip_for_airflow]
+      description = "Airflow web UI access from allowed IP"
+    }
+  }
 
   # NO SSH ACCESS - Security best practice
   # SSH access should be managed through AWS Systems Manager Session Manager
@@ -143,9 +146,12 @@ resource "aws_instance" "airflow_vm" {
     }
   }
 
-  # User data for initial setup (secure)
+  # User data for automatic Airflow installation (secure)
   user_data = base64encode(<<-EOF
     #!/bin/bash
+    
+    # Log all output for debugging
+    exec > >(tee /var/log/user-data.log) 2>&1
     
     # Update system
     apt-get update -y
@@ -159,7 +165,12 @@ resource "aws_instance" "airflow_vm" {
       awscli \
       unzip \
       curl \
-      wget
+      wget \
+      git \
+      build-essential \
+      libssl-dev \
+      libffi-dev \
+      python3-dev
     
     # Install AWS CLI v2
     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
@@ -176,9 +187,6 @@ resource "aws_instance" "airflow_vm" {
     useradd -m -s /bin/bash airflow
     usermod -aG sudo airflow
     
-    # Set up Python virtual environment for airflow user
-    sudo -u airflow python3 -m venv /home/airflow/airflow-env
-    
     # Configure automatic security updates
     apt-get install -y unattended-upgrades
     echo 'Unattended-Upgrade::Automatic-Reboot "false";' >> /etc/apt/apt.conf.d/50unattended-upgrades
@@ -192,8 +200,160 @@ resource "aws_instance" "airflow_vm" {
     ufw default deny incoming
     ufw default allow outgoing
     
-    # Log setup completion
-    echo "$(date): Airflow VM setup completed" >> /var/log/setup.log
+    # AIRFLOW INSTALLATION (as airflow user)
+    export AIRFLOW_HOME=/home/airflow/airflow
+    export AIRFLOW_VERSION=2.8.1
+    export PYTHON_VERSION="3.10"
+    export CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-$${AIRFLOW_VERSION}/constraints-$${PYTHON_VERSION}.txt"
+    
+    # Create airflow directory and set permissions
+    mkdir -p $AIRFLOW_HOME
+    chown -R airflow:airflow /home/airflow
+    
+    # Switch to airflow user for installation
+    sudo -u airflow bash << 'AIRFLOW_SETUP'
+    cd /home/airflow
+    
+    # Create and activate virtual environment
+    python3 -m venv airflow-env
+    source airflow-env/bin/activate
+    
+    # Upgrade pip
+    pip install --upgrade pip
+    
+    # Install Airflow with specific providers
+    pip install "apache-airflow==2.8.1" --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.8.1/constraints-3.10.txt"
+    
+    # Install additional providers
+    pip install apache-airflow-providers-amazon
+    pip install apache-airflow-providers-postgres
+    pip install apache-airflow-providers-http
+    
+    # Install data processing libraries
+    pip install pandas boto3 delta-spark pyspark
+    
+    # Set environment variables
+    export AIRFLOW_HOME=/home/airflow/airflow
+    
+    # Initialize Airflow database
+    airflow db init
+    
+    # Create admin user with secure password
+    ADMIN_PASSWORD=$(openssl rand -base64 12)
+    airflow users create \
+        --username admin \
+        --firstname Admin \
+        --lastname User \
+        --role Admin \
+        --email admin@example.com \
+        --password "$ADMIN_PASSWORD"
+    
+    # Save password to file for reference
+    echo "Airflow Admin Password: $ADMIN_PASSWORD" > /home/airflow/admin_password.txt
+    chmod 600 /home/airflow/admin_password.txt
+    
+    # Create secure Airflow configuration
+    cat > $AIRFLOW_HOME/airflow.cfg << 'AIRFLOW_CFG'
+[core]
+dags_folder = /home/airflow/airflow/dags
+base_log_folder = /home/airflow/airflow/logs
+plugins_folder = /home/airflow/airflow/plugins
+executor = LocalExecutor
+sql_alchemy_conn = sqlite:////home/airflow/airflow/airflow.db
+load_examples = False
+security = True
+
+[webserver]
+web_server_host = 0.0.0.0
+web_server_port = 8080
+secret_key = $(openssl rand -base64 32)
+expose_config = False
+authenticate = True
+auth_backend = airflow.auth.backends.password_auth
+
+[scheduler]
+catchup_by_default = False
+
+[logging]
+logging_level = INFO
+fab_logging_level = WARN
+
+[secrets]
+backend = airflow.secrets.local_filesystem.LocalFilesystemBackend
+
+[aws]
+region_name = us-east-1
+AIRFLOW_CFG
+    
+    # Create directories
+    mkdir -p $AIRFLOW_HOME/dags
+    mkdir -p $AIRFLOW_HOME/logs
+    mkdir -p $AIRFLOW_HOME/plugins
+    
+    # Set proper permissions
+    chmod 700 $AIRFLOW_HOME
+    chmod 600 $AIRFLOW_HOME/airflow.cfg
+    
+AIRFLOW_SETUP
+    
+    # Create systemd service for Airflow webserver
+    cat > /etc/systemd/system/airflow-webserver.service << 'WEBSERVER_SERVICE'
+[Unit]
+Description=Airflow webserver daemon
+After=network.target
+
+[Service]
+Environment=AIRFLOW_HOME=/home/airflow/airflow
+User=airflow
+Group=airflow
+Type=simple
+ExecStart=/home/airflow/airflow-env/bin/airflow webserver
+Restart=on-failure
+RestartSec=5s
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
+WEBSERVER_SERVICE
+    
+    # Create systemd service for Airflow scheduler
+    cat > /etc/systemd/system/airflow-scheduler.service << 'SCHEDULER_SERVICE'
+[Unit]
+Description=Airflow scheduler daemon
+After=network.target
+
+[Service]
+Environment=AIRFLOW_HOME=/home/airflow/airflow
+User=airflow
+Group=airflow
+Type=simple
+ExecStart=/home/airflow/airflow-env/bin/airflow scheduler
+Restart=on-failure
+RestartSec=5s
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
+SCHEDULER_SERVICE
+    
+    # Reload systemd and enable services
+    systemctl daemon-reload
+    systemctl enable airflow-webserver
+    systemctl enable airflow-scheduler
+    
+    # Start services
+    systemctl start airflow-webserver
+    systemctl start airflow-scheduler
+    
+    # Log completion
+    echo "$(date): Airflow installation and setup completed" >> /var/log/setup.log
+    echo "$(date): Airflow services started" >> /var/log/setup.log
   EOF
   )
 
