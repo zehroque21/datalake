@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Airflow 2.8.1 Installation Script - Robust Version
-# This script ensures Airflow 2.8.1 is installed correctly with all dependencies
+# Airflow 2.8.1 Installation Script - LOCAL TESTING VERSION
+# This script is for Docker testing only - includes fix for provider compatibility
 
 # Log all output for debugging
 exec > >(tee /var/log/airflow-install.log) 2>&1
-echo "$(date): Starting Airflow 2.8.1 installation script"
+echo "$(date): Starting Airflow 2.8.1 installation script (LOCAL VERSION)"
 
 # Function to log with timestamp
 log() {
