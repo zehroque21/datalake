@@ -68,11 +68,11 @@ echo "$(date): Using Python version: $PYTHON_VERSION"
 # Clear any existing airflow installations
 pip uninstall apache-airflow apache-airflow-core -y || true
 
-# Install specific version with strict constraints
-echo "$(date): Installing Airflow 2.8.1 with strict version control"
+# Install specific version with working constraint file (using 3.11 constraints that work)
+echo "$(date): Installing Airflow 2.8.1 with working constraint file"
 pip install --no-cache-dir \
     "apache-airflow==2.8.1" \
-    --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.8.1/constraints-3.10.txt" \
+    --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.8.1/constraints-3.11.txt" \
     --force-reinstall || {
     echo "$(date): ERROR: Failed to install Apache Airflow 2.8.1"
     exit 1
