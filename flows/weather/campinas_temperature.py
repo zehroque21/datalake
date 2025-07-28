@@ -129,29 +129,33 @@ def validate_temperature_data(data: Dict[str, Any]) -> Dict[str, Any]:
 
 @task
 def save_temperature_data(data: Dict[str, Any]) -> Dict[str, str]:
-    """Save temperature data to local files"""
-    print("💾 Saving temperature data to local files...")
+    """Save temperature data to local S3 simulation structure"""
+    print("💾 Saving temperature data to local S3 structure...")
     
     try:
-        # Ensure data directory exists
-        data_dir = "/app/data"
-        os.makedirs(data_dir, exist_ok=True)
+        # Use S3 simulation structure
+        staging_dir = "/app/s3/staging/weather"
+        raw_dir = "/app/s3/raw/weather"
+        
+        # Ensure directories exist (they should from Docker copy)
+        os.makedirs(staging_dir, exist_ok=True)
+        os.makedirs(raw_dir, exist_ok=True)
         
         # File paths
-        latest_json = f"{data_dir}/campinas_temperature_latest.json"
-        history_csv = f"{data_dir}/campinas_temperature_history.csv"
+        staging_json = f"{staging_dir}/campinas_temperature_latest.json"
+        raw_csv = f"{raw_dir}/campinas_temperature_history.csv"
         
-        # Save latest reading as JSON
-        print(f"📄 Saving latest reading: {latest_json}")
-        with open(latest_json, 'w') as f:
+        # Save latest reading to staging
+        print(f"📄 Saving to staging: {staging_json}")
+        with open(staging_json, 'w') as f:
             json.dump(data, f, indent=2)
         
-        # Append to CSV history
-        print(f"📊 Updating history CSV: {history_csv}")
+        # Append to raw CSV history
+        print(f"📊 Updating raw history: {raw_csv}")
         
-        if os.path.exists(history_csv):
+        if os.path.exists(raw_csv):
             # Read existing CSV
-            df_existing = pd.read_csv(history_csv)
+            df_existing = pd.read_csv(raw_csv)
             print(f"   Found existing CSV with {len(df_existing)} records")
         else:
             # Create new DataFrame
@@ -170,15 +174,15 @@ def save_temperature_data(data: Dict[str, Any]) -> Dict[str, str]:
             df_combined = df_new
         
         # Save updated CSV
-        df_combined.to_csv(history_csv, index=False)
+        df_combined.to_csv(raw_csv, index=False)
         
         print(f"✅ Temperature data saved:")
-        print(f"   📄 Latest: {latest_json}")
-        print(f"   📊 History: {history_csv} ({len(df_combined)} records)")
+        print(f"   📄 Staging: {staging_json}")
+        print(f"   📊 Raw: {raw_csv} ({len(df_combined)} records)")
         
         return {
-            'latest_json': latest_json,
-            'history_csv': history_csv,
+            'staging_json': staging_json,
+            'raw_csv': raw_csv,
             'total_records': len(df_combined)
         }
         
@@ -193,7 +197,7 @@ def generate_temperature_summary(file_info: Dict[str, str]) -> Dict[str, Any]:
     print("📈 Generating temperature summary...")
     
     try:
-        csv_path = file_info['history_csv']
+        csv_path = file_info['raw_csv']
         
         if not os.path.exists(csv_path):
             return {"error": "No temperature data found"}
@@ -232,6 +236,12 @@ def generate_temperature_summary(file_info: Dict[str, str]) -> Dict[str, Any]:
             'data_quality': {
                 'avg_quality_score': round(df['data_quality_score'].mean(), 1),
                 'mock_data_percentage': round((df['data_quality_score'] < 100).mean() * 100, 1)
+            },
+            's3_structure': {
+                'staging_layer': '/app/s3/staging/weather/',
+                'raw_layer': '/app/s3/raw/weather/',
+                'trusted_layer': '/app/s3/trusted/weather/',
+                'refined_layer': '/app/s3/refined/weather/'
             }
         }
         
@@ -240,6 +250,7 @@ def generate_temperature_summary(file_info: Dict[str, str]) -> Dict[str, Any]:
         print(f"   🌡️ Current: {summary['temperature_stats']['current_celsius']}°C")
         print(f"   📊 Average: {summary['temperature_stats']['avg_celsius']}°C")
         print(f"   📉 Range: {summary['temperature_stats']['min_celsius']}°C - {summary['temperature_stats']['max_celsius']}°C")
+        print(f"   🗂️ S3 Structure: staging → raw → trusted → refined")
         
         return summary
         

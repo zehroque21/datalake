@@ -30,16 +30,18 @@ fi
 echo "🌡️ Checking temperature data collection..."
 sleep 10
 
-# Check if data files exist
-if docker compose exec -T prefect-server test -f /app/data/campinas_temperature_latest.json; then
+# Check if S3 structure and data files exist
+if docker compose exec -T prefect-server test -f /app/s3/staging/weather/campinas_temperature_latest.json; then
     echo "✅ Temperature data files created successfully!"
-    echo "📊 Latest temperature data:"
-    docker compose exec -T prefect-server cat /app/data/campinas_temperature_latest.json | head -10
+    echo "📊 Latest temperature data (staging):"
+    docker compose exec -T prefect-server cat /app/s3/staging/weather/campinas_temperature_latest.json | head -10
     echo ""
-    echo "📈 Data files:"
-    docker compose exec -T prefect-server ls -la /app/data/
+    echo "📈 S3 structure:"
+    docker compose exec -T prefect-server find /app/s3 -type f | head -10
 else
     echo "⚠️ Temperature data files not found yet (may still be processing)"
+    echo "📁 S3 structure available:"
+    docker compose exec -T prefect-server ls -la /app/s3/
 fi
 
 # Show container status
@@ -53,11 +55,11 @@ echo "🌡️ Temperature pipeline is collecting data automatically"
 echo ""
 echo "🔍 Useful commands:"
 echo "   View logs:              docker compose logs -f"
-echo "   View latest temp:       docker compose exec prefect-server cat /app/data/campinas_temperature_latest.json"
-echo "   View history:           docker compose exec prefect-server head /app/data/campinas_temperature_history.csv"
-echo "   View all data files:    docker compose exec prefect-server ls -la /app/data/"
+echo "   View latest temp:       docker compose exec prefect-server cat /app/s3/staging/weather/campinas_temperature_latest.json"
+echo "   View history:           docker compose exec prefect-server head /app/s3/raw/weather/campinas_temperature_history.csv"
+echo "   View S3 structure:      docker compose exec prefect-server find /app/s3 -type f"
 echo "   Stop environment:       docker compose down"
 echo ""
 echo "📊 The temperature pipeline runs automatically every 30 minutes!"
-echo "💾 Data is stored in simple JSON and CSV files!"
+echo "💾 Data follows S3 structure: staging → raw → trusted → refined!"
 
