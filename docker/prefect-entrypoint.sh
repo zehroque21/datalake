@@ -42,26 +42,46 @@ WORKER_PID=$!
 # Wait a bit for worker to start
 sleep 5
 
-# Run the temperature pipeline immediately on startup (using staging version)
-echo "🌡️ Running initial Campinas Temperature Pipeline (Local Staging)..."
+# Run the temperature pipeline immediately on startup (simple version)
+echo "🌡️ Running initial Campinas Temperature Pipeline..."
 cd /app/flows
 python -c "
 import sys
 sys.path.append('/app/flows')
-from weather.campinas_temperature_staging import campinas_temperature_staging_pipeline
+from weather.campinas_temperature import campinas_temperature_pipeline
 try:
-    result = campinas_temperature_staging_pipeline()
+    result = campinas_temperature_pipeline()
     print(f'🎉 Initial pipeline completed: {result[\"pipeline_status\"]}')
     print(f'🌡️ Temperature: {result[\"temperature_celsius\"]}°C')
     print(f'🌤️ Weather: {result[\"weather_description\"]}')
-    print(f'💾 Data saved to staging: {result[\"staging_info\"][\"staging_base\"]}')
+    print(f'💾 Data saved: {result[\"files_saved\"][\"total_records\"]} records')
 except Exception as e:
     print(f'❌ Pipeline error: {e}')
 "
 
 # Deploy the temperature pipeline with scheduling
 echo "📅 Deploying scheduled temperature monitoring..."
-python weather/deploy_temperature_flow.py &
+cd /app/flows
+python -c "
+import sys
+sys.path.append('/app/flows')
+from weather.campinas_temperature import campinas_temperature_pipeline
+from prefect.deployments import Deployment
+from prefect.server.schemas.schedules import IntervalSchedule
+from datetime import timedelta
+
+try:
+    deployment = Deployment.build_from_flow(
+        flow=campinas_temperature_pipeline,
+        name='campinas-temperature-monitor',
+        schedule=IntervalSchedule(interval=timedelta(minutes=30)),
+        work_pool_name='default-agent-pool'
+    )
+    deployment.apply()
+    print('✅ Temperature monitoring deployment created successfully!')
+except Exception as e:
+    print(f'❌ Deployment error: {e}')
+" &
 DEPLOY_PID=$!
 
 echo "🎉 Prefect environment fully initialized!"

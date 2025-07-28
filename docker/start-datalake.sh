@@ -30,16 +30,16 @@ fi
 echo "🌡️ Checking temperature data collection..."
 sleep 10
 
-# Check if staging data files exist
-if docker compose exec -T prefect-server test -d /app/data/staging/weather/campinas; then
-    echo "✅ Temperature staging directory created successfully!"
+# Check if data files exist
+if docker compose exec -T prefect-server test -f /app/data/campinas_temperature_latest.json; then
+    echo "✅ Temperature data files created successfully!"
     echo "📊 Latest temperature data:"
-    docker compose exec -T prefect-server cat /app/data/staging/weather/campinas/latest/temperature.json | head -10
+    docker compose exec -T prefect-server cat /app/data/campinas_temperature_latest.json | head -10
     echo ""
-    echo "📈 Staging structure:"
-    docker compose exec -T prefect-server find /app/data/staging -type f | head -10
+    echo "📈 Data files:"
+    docker compose exec -T prefect-server ls -la /app/data/
 else
-    echo "⚠️ Temperature staging directory not found yet (may still be processing)"
+    echo "⚠️ Temperature data files not found yet (may still be processing)"
 fi
 
 # Show container status
@@ -53,11 +53,11 @@ echo "🌡️ Temperature pipeline is collecting data automatically"
 echo ""
 echo "🔍 Useful commands:"
 echo "   View logs:              docker compose logs -f"
-echo "   View latest temp:       docker compose exec prefect-server cat /app/data/staging/weather/campinas/latest/temperature.json"
-echo "   View daily history:     docker compose exec prefect-server head /app/data/staging/weather/campinas/daily/*/temperature_history.csv"
-echo "   View staging structure: docker compose exec prefect-server find /app/data/staging -type f"
+echo "   View latest temp:       docker compose exec prefect-server cat /app/data/campinas_temperature_latest.json"
+echo "   View history:           docker compose exec prefect-server head /app/data/campinas_temperature_history.csv"
+echo "   View all data files:    docker compose exec prefect-server ls -la /app/data/"
 echo "   Stop environment:       docker compose down"
 echo ""
 echo "📊 The temperature pipeline runs automatically every 30 minutes!"
-echo "💾 Data is stored in a local staging area with S3-like structure!"
+echo "💾 Data is stored in simple JSON and CSV files!"
 

@@ -1,15 +1,15 @@
 """
-Campinas Temperature Pipeline
-Collects temperature data from Campinas and stores in a table
+Simple Campinas Temperature Data Collection Pipeline
+Collects temperature data from Campinas and stores in local files
 """
 
 import pandas as pd
 import requests
+import os
 from datetime import datetime, timedelta
 from prefect import flow, task
 from prefect.tasks import task_input_hash
 import json
-import os
 from typing import Dict, Any
 
 
@@ -19,11 +19,7 @@ def get_campinas_temperature() -> Dict[str, Any]:
     print("🌡️ Fetching temperature data for Campinas...")
     
     try:
-        # Using OpenWeatherMap API (free tier)
-        # Note: In production, you'd use a real API key
-        # For demo, we'll use a mock API or free service
-        
-        # Option 1: Using wttr.in (free weather service)
+        # Using wttr.in (free weather service)
         url = "https://wttr.in/Campinas,Brazil?format=j1"
         
         response = requests.get(url, timeout=10)
@@ -132,58 +128,59 @@ def validate_temperature_data(data: Dict[str, Any]) -> Dict[str, Any]:
 
 
 @task
-def load_to_temperature_table(data: Dict[str, Any]) -> str:
-    """Load temperature data to persistent table (CSV file for demo)"""
-    print("💾 Loading temperature data to table...")
+def save_temperature_data(data: Dict[str, Any]) -> Dict[str, str]:
+    """Save temperature data to local files"""
+    print("💾 Saving temperature data to local files...")
     
     try:
-        # Create data directory if it doesn't exist
+        # Ensure data directory exists
         data_dir = "/app/data"
         os.makedirs(data_dir, exist_ok=True)
         
-        # Define table file path
-        table_path = os.path.join(data_dir, "campinas_temperature_history.csv")
+        # File paths
+        latest_json = f"{data_dir}/campinas_temperature_latest.json"
+        history_csv = f"{data_dir}/campinas_temperature_history.csv"
         
-        # Convert data to DataFrame
-        df_new = pd.DataFrame([data])
-        
-        # Check if table exists
-        if os.path.exists(table_path):
-            # Read existing data
-            df_existing = pd.read_csv(table_path)
-            
-            # Append new data
-            df_combined = pd.concat([df_existing, df_new], ignore_index=True)
-            
-            # Remove duplicates based on timestamp (keep latest)
-            df_combined = df_combined.drop_duplicates(
-                subset=['timestamp'], 
-                keep='last'
-            )
-            
-            # Sort by timestamp
-            df_combined = df_combined.sort_values('timestamp')
-            
-            print(f"📊 Appending to existing table ({len(df_existing)} → {len(df_combined)} records)")
-            
-        else:
-            df_combined = df_new
-            print("📊 Creating new temperature table")
-        
-        # Save to CSV
-        df_combined.to_csv(table_path, index=False)
-        
-        # Also save as JSON for easy reading
-        json_path = os.path.join(data_dir, "campinas_temperature_latest.json")
-        with open(json_path, 'w') as f:
+        # Save latest reading as JSON
+        print(f"📄 Saving latest reading: {latest_json}")
+        with open(latest_json, 'w') as f:
             json.dump(data, f, indent=2)
         
-        print(f"✅ Temperature data saved:")
-        print(f"   📄 CSV Table: {table_path}")
-        print(f"   📄 Latest JSON: {json_path}")
-        print(f"   📊 Total records: {len(df_combined)}")
+        # Append to CSV history
+        print(f"📊 Updating history CSV: {history_csv}")
         
-        return table_path
+        if os.path.exists(history_csv):
+            # Read existing CSV
+            df_existing = pd.read_csv(history_csv)
+            print(f"   Found existing CSV with {len(df_existing)} records")
+        else:
+            # Create new DataFrame
+            df_existing = pd.DataFrame()
+            print("   Creating new CSV file")
+        
+        # Add new data
+        df_new = pd.DataFrame([data])
+        
+        if not df_existing.empty:
+            df_combined = pd.concat([df_existing, df_new], ignore_index=True)
+            # Remove duplicates based on timestamp
+            df_combined = df_combined.drop_duplicates(subset=['timestamp'], keep='last')
+            df_combined = df_combined.sort_values('timestamp')
+        else:
+            df_combined = df_new
+        
+        # Save updated CSV
+        df_combined.to_csv(history_csv, index=False)
+        
+        print(f"✅ Temperature data saved:")
+        print(f"   📄 Latest: {latest_json}")
+        print(f"   📊 History: {history_csv} ({len(df_combined)} records)")
+        
+        return {
+            'latest_json': latest_json,
+            'history_csv': history_csv,
+            'total_records': len(df_combined)
+        }
         
     except Exception as e:
         print(f"❌ Error saving temperature data: {e}")
@@ -191,19 +188,21 @@ def load_to_temperature_table(data: Dict[str, Any]) -> str:
 
 
 @task
-def generate_temperature_summary(table_path: str) -> Dict[str, Any]:
-    """Generate summary statistics from temperature history"""
+def generate_temperature_summary(file_info: Dict[str, str]) -> Dict[str, Any]:
+    """Generate summary statistics from temperature data"""
     print("📈 Generating temperature summary...")
     
     try:
-        if not os.path.exists(table_path):
-            return {"error": "Temperature table not found"}
+        csv_path = file_info['history_csv']
         
-        # Read temperature history
-        df = pd.read_csv(table_path)
+        if not os.path.exists(csv_path):
+            return {"error": "No temperature data found"}
+        
+        # Read CSV
+        df = pd.read_csv(csv_path)
         
         if df.empty:
-            return {"error": "No temperature data found"}
+            return {"error": "No temperature data found in CSV"}
         
         # Convert timestamp to datetime
         df['timestamp'] = pd.to_datetime(df['timestamp'])
@@ -211,6 +210,7 @@ def generate_temperature_summary(table_path: str) -> Dict[str, Any]:
         # Calculate summary statistics
         summary = {
             'total_records': len(df),
+            'data_source': csv_path,
             'date_range': {
                 'first_record': df['timestamp'].min().isoformat(),
                 'last_record': df['timestamp'].max().isoformat(),
@@ -258,7 +258,7 @@ def campinas_temperature_pipeline():
     Main temperature monitoring pipeline:
     1. Fetch current temperature data for Campinas
     2. Validate and clean the data
-    3. Append to temperature history table
+    3. Save to local files (JSON + CSV)
     4. Generate summary statistics
     """
     print("🚀 Starting Campinas Temperature Pipeline...")
@@ -269,11 +269,11 @@ def campinas_temperature_pipeline():
     # Validate data
     validated_data = validate_temperature_data(temperature_data)
     
-    # Load to table
-    table_path = load_to_temperature_table(validated_data)
+    # Save to files
+    file_info = save_temperature_data(validated_data)
     
     # Generate summary
-    summary = generate_temperature_summary(table_path)
+    summary = generate_temperature_summary(file_info)
     
     print("🎉 Campinas Temperature Pipeline completed!")
     
@@ -281,7 +281,7 @@ def campinas_temperature_pipeline():
         'pipeline_status': 'completed',
         'temperature_celsius': validated_data['temperature_celsius'],
         'weather_description': validated_data['weather_description'],
-        'table_path': table_path,
+        'files_saved': file_info,
         'summary': summary,
         'execution_time': datetime.now().isoformat()
     }
@@ -290,8 +290,10 @@ def campinas_temperature_pipeline():
 if __name__ == "__main__":
     # Run the flow locally for testing
     print("🧪 Running Campinas Temperature Pipeline locally...")
+    
     result = campinas_temperature_pipeline()
     print(f"🎯 Pipeline result: {result['pipeline_status']}")
     print(f"🌡️ Current temperature: {result['temperature_celsius']}°C")
     print(f"🌤️ Weather: {result['weather_description']}")
+    print(f"💾 Files saved: {result['files_saved']['total_records']} records")
 
