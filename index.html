@@ -85,27 +85,28 @@
             padding: 2rem 0;
         }
 
+
         .hero {
             text-align: center;
             padding: 4rem 0;
-            color: var(--white);
+            color: #fff;
         }
 
         .hero h1 {
             font-size: 3.5rem;
-            font-weight: 700;
+            font-weight: 800;
             margin-bottom: 1rem;
-            background: linear-gradient(45deg, var(--white), #e2e8f0);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #fff;
+            text-shadow: 0 4px 24px rgba(60,60,100,0.18), 0 1px 0 #b7bdfc;
+            letter-spacing: 1px;
         }
 
         .hero p {
-            font-size: 1.25rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
-            max-width: 600px;
+            font-size: 1.5rem;
+            margin-bottom: 2.5rem;
+            color: #fff;
+            text-shadow: 0 2px 8px rgba(60,60,100,0.18);
+            max-width: 700px;
             margin-left: auto;
             margin-right: auto;
         }
@@ -261,51 +262,98 @@
 
         .about {
             text-align: center;
+            margin-top: 2rem;
         }
 
-        .creator-info {
+        .creator-card {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            gap: 2rem;
-            margin-top: 2rem;
-            flex-wrap: wrap;
+            background: linear-gradient(120deg, #f4f7fb 60%, #e0e7ff 100%);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            padding: 2.5rem 2rem 2rem 2rem;
+            max-width: 480px;
+            margin: 2rem auto 0 auto;
+        }
+
+        .creator-avatar {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #b7bdfc 0%, #6ee7b7 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 1.2rem;
+            box-shadow: 0 2px 12px rgba(124,140,248,0.10);
+            border: 4px solid #fff;
+        }
+
+        .creator-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 0.2rem;
+        }
+
+        .creator-role {
+            color: var(--text-light);
+            font-size: 1.1rem;
+            margin-bottom: 1.1rem;
+        }
+
+        .creator-bio {
+            color: var(--text-dark);
+            font-size: 1.05rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .creator-socials {
+            display: flex;
+            gap: 1.2rem;
+            margin-bottom: 1.5rem;
         }
 
         .social-link {
-            display: inline-block;
-            background: linear-gradient(45deg, #b7bdfc, #6ee7b7);
-            color: var(--primary-dark);
-            padding: 0.75rem;
-            border-radius: 50%;
-            text-decoration: none;
-            transition: transform 0.3s ease;
-            width: 50px;
-            height: 50px;
             display: flex;
             align-items: center;
             justify-content: center;
+            background: linear-gradient(45deg, #b7bdfc, #6ee7b7);
+            color: var(--primary-dark);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px rgba(124,140,248,0.10);
         }
 
         .social-link:hover {
-            transform: scale(1.1);
+            transform: scale(1.13);
+            box-shadow: 0 4px 16px rgba(124,140,248,0.18);
         }
 
         .tech-stack {
             display: flex;
             justify-content: center;
-            gap: 1rem;
-            margin: 2rem 0;
+            gap: 0.7rem;
+            margin: 0.5rem 0 0 0;
             flex-wrap: wrap;
         }
 
         .tech-badge {
             background: linear-gradient(45deg, #b7bdfc, #6ee7b7);
             color: var(--primary-dark);
-            padding: 0.5rem 1rem;
+            padding: 0.45rem 1rem;
             border-radius: 25px;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             font-weight: 500;
+            margin-bottom: 0.5rem;
         }
 
         footer {
@@ -524,26 +572,26 @@
         <section class="section about" id="about">
             <div class="container">
                 <h2>About the Creator</h2>
-                <p><strong>Amado Roque</strong> is a Data Engineer specialized in modern data orchestration and secure analytics solutions. This platform showcases best practices in data engineering with focus on security and developer experience.</p>
-
-                <div class="creator-info">
-                    <div class="creator-links">
-                        <a href="https://www.linkedin.com/in/amado-roque/" class="social-link" title="LinkedIn">
-                            <i class="fab fa-linkedin-in"></i>
-                        </a>
-                        <a href="https://github.com/zehroque21" class="social-link" title="GitHub">
-                            <i class="fab fa-github"></i>
-                        </a>
+                <div class="creator-card">
+                    <div class="creator-avatar">AR</div>
+                    <div class="creator-name">Amado Roque</div>
+                    <div class="creator-role">Data Engineer</div>
+                    <div class="creator-bio">
+                        Specialized in modern data orchestration and secure analytics solutions.<br>
+                        This platform showcases best practices in data engineering with focus on security and developer experience.
                     </div>
-                </div>
-
-                <div class="tech-stack">
-                    <span class="tech-badge"><i class="fas fa-water"></i> Prefect</span>
-                    <span class="tech-badge"><i class="fab fa-aws"></i> AWS</span>
-                    <span class="tech-badge"><i class="fas fa-database"></i> Delta Lake</span>
-                    <span class="tech-badge"><i class="fab fa-docker"></i> Docker</span>
-                    <span class="tech-badge"><i class="fas fa-code"></i> Terraform</span>
-                    <span class="tech-badge"><i class="fab fa-python"></i> Python</span>
+                    <div class="creator-socials">
+                        <a href="https://www.linkedin.com/in/amado-roque/" class="social-link" title="LinkedIn" target="_blank" rel="noopener"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="https://github.com/zehroque21" class="social-link" title="GitHub" target="_blank" rel="noopener"><i class="fab fa-github"></i></a>
+                    </div>
+                    <div class="tech-stack">
+                        <span class="tech-badge"><i class="fas fa-water"></i> Prefect</span>
+                        <span class="tech-badge"><i class="fab fa-aws"></i> AWS</span>
+                        <span class="tech-badge"><i class="fas fa-database"></i> Delta Lake</span>
+                        <span class="tech-badge"><i class="fab fa-docker"></i> Docker</span>
+                        <span class="tech-badge"><i class="fas fa-code"></i> Terraform</span>
+                        <span class="tech-badge"><i class="fab fa-python"></i> Python</span>
+                    </div>
                 </div>
             </div>
         </section>
