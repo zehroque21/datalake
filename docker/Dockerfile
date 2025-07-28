@@ -1,50 +1,47 @@
-# Dockerfile para testar ambiente Airflow localmente
-# Replica exatamente o ambiente EC2 Ubuntu 22.04
+# Prefect Data Orchestration Environment
+FROM python:3.11-slim
 
-FROM ubuntu:22.04
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PREFECT_API_URL=http://localhost:4200/api
 
-# Evitar prompts interativos durante instalação
-ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=UTC
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
 
-# Instalar dependências básicas (igual à EC2)
-RUN apt-get update -y && \
-    apt-get upgrade -y && \
-    apt-get install -y \
-        python3 \
-        python3-pip \
-        python3-venv \
-        build-essential \
-        libssl-dev \
-        libffi-dev \
-        python3-dev \
-        net-tools \
-        curl \
-        wget \
-        git \
-        sudo \
-        systemctl \
-        cron && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Create prefect user
+RUN useradd -m -s /bin/bash prefect
 
-# Criar usuário airflow (igual à EC2)
-RUN useradd -m -s /bin/bash airflow && \
-    usermod -aG sudo airflow && \
-    echo "airflow ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+# Set working directory
+WORKDIR /app
 
-# Criar diretórios necessários
-RUN mkdir -p /var/log && \
-    touch /var/log/airflow-install.log && \
-    chown airflow:airflow /var/log/airflow-install.log
+# Install Prefect and common data tools
+RUN pip install --no-cache-dir \
+    prefect==2.14.21 \
+    pandas==2.1.4 \
+    boto3==1.34.0 \
+    requests==2.31.0 \
+    sqlalchemy==2.0.23 \
+    psycopg2-binary==2.9.9
 
-# Copiar script de instalação que funciona
-COPY docker/install_airflow.sh /tmp/install_airflow.sh
-RUN chmod +x /tmp/install_airflow.sh
+# Copy example flows
+COPY docker/flows/ /app/flows/
+COPY docker/prefect-entrypoint.sh /app/prefect-entrypoint.sh
 
-# Expor porta do Airflow
-EXPOSE 8080
+# Make scripts executable
+RUN chmod +x /app/prefect-entrypoint.sh
 
-# Comando padrão
-CMD ["/bin/bash"]
+# Change ownership to prefect user
+RUN chown -R prefect:prefect /app
+
+# Switch to prefect user
+USER prefect
+
+# Expose Prefect UI port
+EXPOSE 4200
+
+# Default command
+CMD ["/app/prefect-entrypoint.sh"]
 

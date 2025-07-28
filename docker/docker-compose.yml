@@ -1,24 +1,42 @@
-version: '3.8'
-
 services:
-  airflow-test:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile
-    container_name: airflow-local-test
+  prefect-server:
+    build: .
+    container_name: prefect-server
     ports:
-      - "8080:8080"
-    volumes:
-      - ../scripts:/scripts:ro
-      - airflow-logs:/var/log
-      - airflow-data:/home/airflow
+      - "4200:4200"
     environment:
-      - AIRFLOW_HOME=/home/airflow/airflow
-    tty: true
-    stdin_open: true
-    command: /bin/bash
+      - PREFECT_API_URL=http://0.0.0.0:4200/api
+      - PREFECT_SERVER_API_HOST=0.0.0.0
+      - PREFECT_SERVER_API_PORT=4200
+    command: prefect server start --host 0.0.0.0 --port 4200
+    volumes:
+      - prefect_data:/app/.prefect
+    networks:
+      - prefect-network
+
+  prefect-agent:
+    build: .
+    container_name: prefect-agent
+    depends_on:
+      - prefect-server
+    environment:
+      - PREFECT_API_URL=http://prefect-server:4200/api
+    command: >
+      sh -c "
+        sleep 10 &&
+        prefect work-pool create --type process default-pool &&
+        prefect worker start --pool default-pool
+      "
+    volumes:
+      - prefect_data:/app/.prefect
+      - ./flows:/app/flows
+    networks:
+      - prefect-network
 
 volumes:
-  airflow-logs:
-  airflow-data:
+  prefect_data:
+
+networks:
+  prefect-network:
+    driver: bridge
 
