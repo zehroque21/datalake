@@ -36,8 +36,11 @@ COPY prefect-entrypoint.sh /app/prefect-entrypoint.sh
 # Make scripts executable
 RUN chmod +x /app/prefect-entrypoint.sh
 
-# Change ownership to prefect user
-RUN chown -R prefect:prefect /app
+
+# Corrige permissões para o diretório do UI do Prefect Server
+RUN mkdir -p /usr/local/lib/python3.11/site-packages/prefect/server/ui_build \
+    && chmod -R 777 /usr/local/lib/python3.11/site-packages/prefect/server/ui_build \
+    && chown -R prefect:prefect /app
 
 # Switch to prefect user
 USER prefect
