@@ -1,32 +1,32 @@
 #!/bin/bash
 
-# Airflow 2.8.1 Installation Script - Robust Version
-# This script ensures Airflow 2.8.1 is installed correctly with all dependencies
+# Airflow 2.8.1 Installation Script for EC2 - Based on Working Local Version
+# This script installs Airflow 2.8.1 with minimal providers to avoid conflicts
 
 # Log all output for debugging
 exec > >(tee /var/log/airflow-install.log) 2>&1
-echo "$(date): Starting Airflow 2.8.1 installation script"
+echo "$(date): Starting Airflow 2.8.1 installation for EC2 (MINIMAL + ESSENTIAL PROVIDERS)"
 
 # Function to log with timestamp
 log() {
     echo "$(date): $1"
 }
 
-# Function to run commands with error handling
+# Function to run command with error handling
 run_cmd() {
-    log "Running: $1"
-    if eval "$1"; then
-        log "SUCCESS: $1"
-        return 0
+    local cmd="$1"
+    log "Running: $cmd"
+    if eval "$cmd"; then
+        log "SUCCESS: $cmd"
     else
-        log "ERROR: Failed to run: $1"
+        log "ERROR: Failed to run: $cmd"
         return 1
     fi
 }
 
 log "=== AIRFLOW 2.8.1 INSTALLATION STARTING ==="
 
-# Update system
+# Update system packages
 log "Updating system packages"
 run_cmd "apt-get update -y"
 run_cmd "apt-get upgrade -y"
@@ -40,11 +40,13 @@ log "Creating airflow user"
 run_cmd "useradd -m -s /bin/bash airflow" || log "User airflow may already exist"
 run_cmd "usermod -aG sudo airflow"
 
-# Configure firewall
+# Configure basic firewall
 log "Configuring basic firewall"
-run_cmd "ufw --force enable"
-run_cmd "ufw default deny incoming"
-run_cmd "ufw default allow outgoing"
+run_cmd "ufw --force enable" || log "UFW may not be available"
+run_cmd "ufw default deny incoming" || log "UFW may not be available"
+run_cmd "ufw default allow outgoing" || log "UFW may not be available"
+run_cmd "ufw allow 22" || log "UFW may not be available"
+run_cmd "ufw allow 8080" || log "UFW may not be available"
 
 # Install Airflow as airflow user
 log "Starting Airflow installation as airflow user"
@@ -59,60 +61,80 @@ echo "$(date): Setting up environment variables"
 export AIRFLOW_HOME=/home/airflow/airflow
 
 echo "$(date): Upgrading pip"
-pip install --upgrade pip || { echo "$(date): ERROR: Failed to upgrade pip"; exit 1; }
+pip install --upgrade pip
 
-echo "$(date): Installing Apache Airflow 2.8.1 with robust version control"
-PYTHON_VERSION=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
-echo "$(date): Using Python version: $PYTHON_VERSION"
+echo "$(date): REMOVING ALL EXISTING AIRFLOW PACKAGES"
+pip uninstall -y apache-airflow apache-airflow-core $(pip list | grep apache-airflow | cut -d' ' -f1) 2>/dev/null || true
 
-# Clear any existing airflow installations
-pip uninstall apache-airflow apache-airflow-core -y || true
+echo "$(date): Installing ONLY Airflow core 2.8.1 (NO DEPENDENCIES)"
+pip install --no-cache-dir --no-deps "apache-airflow==2.8.1"
 
-# Install specific version with working constraint file (using 3.11 constraints that work)
-echo "$(date): Installing Airflow 2.8.1 with working constraint file"
+echo "$(date): Installing MINIMAL dependencies manually"
 pip install --no-cache-dir \
-    "apache-airflow==2.8.1" \
-    --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.8.1/constraints-3.11.txt" \
-    --force-reinstall || {
-    echo "$(date): ERROR: Failed to install Apache Airflow 2.8.1"
-    exit 1
-}
+    "sqlalchemy>=1.4.28,<2.0" \
+    "flask>=2.2,<2.3" \
+    "jinja2>=3.0.0" \
+    "werkzeug>=2.2,<2.3" \
+    "click>=8.0" \
+    "python-dateutil>=2.3" \
+    "pendulum>=2.1.2,<4.0" \
+    "croniter>=0.3.17" \
+    "psutil>=4.2.0" \
+    "tabulate>=0.7.5" \
+    "packaging>=14.0" \
+    "markupsafe>=1.1.1" \
+    "itsdangerous>=2.0" \
+    "blinker" \
+    "colorlog>=4.0.2,<5.0" \
+    "alembic>=1.6.3,<2.0" \
+    "argcomplete>=1.10" \
+    "attrs>=22.1.0" \
+    "gunicorn>=20.1.0" \
+    "tenacity>=6.2.0"
 
-# Verify specific version was installed
-echo "$(date): Verifying Airflow 2.8.1 installation"
-INSTALLED_VERSION=$(pip show apache-airflow | grep Version | cut -d' ' -f2)
+echo "$(date): Installing ESSENTIAL providers (compatible versions)"
+pip install --no-cache-dir \
+    "apache-airflow-providers-amazon==8.25.0" \
+    "apache-airflow-providers-http==4.8.0" \
+    "apache-airflow-providers-ftp==3.7.0" \
+    "pandas" \
+    "boto3"
+
+echo "$(date): Verifying Airflow installation"
+INSTALLED_VERSION=$(python3 -c "import airflow; print(airflow.__version__)")
 if [[ "$INSTALLED_VERSION" != "2.8.1" ]]; then
-    echo "$(date): ERROR: Wrong Airflow version installed: $INSTALLED_VERSION (expected 2.8.1)"
+    echo "$(date): ERROR: Wrong Airflow version: $INSTALLED_VERSION"
     exit 1
 fi
-
-# Verify executable exists
-if [[ ! -f "/home/airflow/airflow-env/bin/airflow" ]]; then
-    echo "$(date): ERROR: Airflow executable not found at expected location"
-    exit 1
-fi
-
-echo "$(date): Airflow 2.8.1 successfully installed and verified"
-
-# Test Airflow version
-echo "$(date): Testing Airflow installation"
-airflow version || {
-    echo "$(date): ERROR: Airflow version command failed"
-    exit 1
-}
-
-echo "$(date): Installing Airflow providers compatible with 2.8.1"
-pip install "apache-airflow-providers-amazon==8.25.0" || {
-    echo "$(date): WARNING: Failed to install AWS provider"
-}
-pip install pandas boto3 || {
-    echo "$(date): WARNING: Failed to install pandas/boto3"
-}
 
 echo "$(date): Creating Airflow directories"
 mkdir -p $AIRFLOW_HOME/dags
 mkdir -p $AIRFLOW_HOME/logs  
 mkdir -p $AIRFLOW_HOME/plugins
+
+echo "$(date): Creating Airflow configuration"
+cat > $AIRFLOW_HOME/airflow.cfg << 'AIRFLOW_CFG'
+[core]
+dags_folder = /home/airflow/airflow/dags
+base_log_folder = /home/airflow/airflow/logs
+plugins_folder = /home/airflow/airflow/plugins
+executor = LocalExecutor
+sql_alchemy_conn = sqlite:////home/airflow/airflow/airflow.db
+load_examples = False
+
+[webserver]
+web_server_host = 0.0.0.0
+web_server_port = 8080
+authenticate = True
+
+[scheduler]
+catchup_by_default = False
+
+[logging]
+logging_level = INFO
+AIRFLOW_CFG
+
+chmod 600 $AIRFLOW_HOME/airflow.cfg
 
 echo "$(date): Initializing Airflow database"
 airflow db init || {
@@ -129,58 +151,12 @@ airflow users create \
     --email admin@example.com \
     --password admin123
 
-echo "$(date): Saving admin credentials"
-echo "Username: admin" > /home/airflow/admin_credentials.txt
-echo "Password: admin123" >> /home/airflow/admin_credentials.txt
-chmod 600 /home/airflow/admin_credentials.txt
-
-echo "$(date): Creating Airflow configuration"
-cat > $AIRFLOW_HOME/airflow.cfg << 'AIRFLOW_CFG'
-[core]
-dags_folder = /home/airflow/airflow/dags
-base_log_folder = /home/airflow/airflow/logs
-plugins_folder = /home/airflow/airflow/plugins
-executor = LocalExecutor
-sql_alchemy_conn = sqlite:////home/airflow/airflow/airflow.db
-load_examples = False
-
-[webserver]
-web_server_host = 0.0.0.0
-web_server_port = 8080
-authenticate = True
-auth_backend = airflow.auth.backends.password_auth
-
-[scheduler]
-catchup_by_default = False
-
-[logging]
-logging_level = INFO
-
-[aws]
-region_name = us-east-1
-AIRFLOW_CFG
-
-chmod 600 $AIRFLOW_HOME/airflow.cfg
-
-# Final verification that everything is working
-echo "$(date): Performing final verification"
-airflow version || {
-    echo "$(date): ERROR: Final Airflow verification failed"
-    exit 1
-}
-
-# Test that Airflow can access its configuration
-airflow config list --defaults > /dev/null || {
-    echo "$(date): ERROR: Airflow configuration test failed"
-    exit 1
-}
-
 echo "$(date): Airflow installation completed successfully"
 echo "$(date): Airflow version: $(airflow version)"
 AIRFLOW_INSTALL
 
-# Verify Airflow installation was successful before creating services
-log "Verifying Airflow installation before creating services"
+# Verify Airflow installation was successful
+log "Verifying Airflow installation"
 if ! sudo -u airflow bash -c "cd /home/airflow && source airflow-env/bin/activate && command -v airflow"; then
     log "ERROR: Airflow installation verification failed"
     exit 1
@@ -256,7 +232,7 @@ run_cmd "systemctl start airflow-scheduler"
 
 # Wait for services to start
 log "Waiting for services to start"
-sleep 10
+sleep 15
 
 # Verify services are running
 log "Verifying services are running"

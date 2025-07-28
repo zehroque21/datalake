@@ -1,113 +1,65 @@
 # 🐳 Ambiente de Teste Local do Airflow
 
-Este ambiente Docker replica exatamente o ambiente EC2 Ubuntu 22.04 para testar a instalação do Airflow localmente.
+Este ambiente Docker permite testar a instalação do Airflow localmente antes do deploy na AWS.
 
 ## 🚀 Como Usar
 
 ### Pré-requisitos
-- Docker instalado e rodando
-- Docker Compose instalado
+- Docker Desktop instalado e rodando
+- Git para clonar o repositório
 
-### Teste Rápido
+### Comandos Básicos
+
 ```bash
-cd docker/
+# Clonar repositório
+git clone https://github.com/zehroque21/datalake.git
+cd datalake/docker
+
+# Executar teste automatizado
 ./test-local.sh
+
+# Acessar Airflow
+# URL: http://localhost:8080
+# Usuário: admin
+# Senha: admin123
 ```
 
-### Teste Manual
-```bash
-# Construir e iniciar
-cd docker/
-docker compose up -d
+### Debug Manual
 
+```bash
 # Entrar no container
 docker compose exec airflow-test bash
 
-# Executar instalação manualmente
-cd /tmp
-./install_airflow.sh
-
-# Ver logs
+# Ver logs de instalação
 tail -f /var/log/airflow-install.log
-```
 
-### Acessar Airflow
-- **URL:** http://localhost:8080
-- **Usuário:** admin
-- **Senha:** admin123
+# Ver logs do Airflow
+tail -f /home/airflow/airflow-webserver.log
+tail -f /home/airflow/airflow-scheduler.log
 
-## 🔧 Comandos Úteis
-
-```bash
-# Ver logs do container
-docker compose logs -f
-
-# Reiniciar container
-docker compose restart
-
-# Parar e remover
+# Parar e limpar
 docker compose down
-
-# Limpar volumes (reset completo)
-docker compose down -v
-
-# Entrar no container para debug
-docker compose exec airflow-test bash
-
-# Ver status dos serviços Airflow
-docker compose exec airflow-test systemctl status airflow-webserver
-docker compose exec airflow-test systemctl status airflow-scheduler
 ```
 
-## 🐛 Debug
+## 📋 Arquivos
 
-### Ver logs de instalação
-```bash
-docker compose exec airflow-test tail -f /var/log/airflow-install.log
-```
+- **`Dockerfile`** - Imagem Ubuntu 22.04 com Airflow
+- **`docker-compose.yml`** - Configuração do container
+- **`install_airflow.sh`** - Script de instalação que funciona
+- **`test-local.sh`** - Script automatizado de teste
+- **`.dockerignore`** - Otimização do build
 
-### Verificar versão instalada
-```bash
-docker compose exec airflow-test sudo -u airflow bash -c "
-cd /home/airflow
-source airflow-env/bin/activate
-pip show apache-airflow | grep Version
-"
-```
+## ✅ Versão Testada
 
-### Testar comando airflow
-```bash
-docker compose exec airflow-test sudo -u airflow bash -c "
-cd /home/airflow
-source airflow-env/bin/activate
-export AIRFLOW_HOME=/home/airflow/airflow
-airflow version
-"
-```
+- **Airflow:** 2.8.1 (instalação minimal sem providers)
+- **Python:** 3.10
+- **Executor:** SequentialExecutor
+- **Database:** SQLite
 
-## 📁 Estrutura
+## 🎯 Próximos Passos
 
-```
-docker/
-├── Dockerfile              # Imagem Ubuntu 22.04 + dependências
-├── docker-compose.yml      # Configuração do container
-├── test-local.sh           # Script de teste automatizado
-└── README.md               # Esta documentação
-```
-
-## 🎯 Vantagens
-
-- ✅ **Ambiente idêntico** à EC2
-- ✅ **Teste rápido** (segundos vs minutos)
-- ✅ **Debug fácil** com logs em tempo real
-- ✅ **Sem custos** AWS
-- ✅ **Iteração rápida** para correções
-- ✅ **Reset simples** com `docker compose down -v`
-
-## 🔄 Workflow Recomendado
-
-1. **Teste local** com `./test-local.sh`
-2. **Debug e correção** se necessário
-3. **Commit mudanças** quando funcionar
-4. **Deploy na EC2** com confiança
+Após confirmar que funciona localmente:
+1. Adaptar script para infraestrutura EC2
+2. Adicionar providers necessários
+3. Deploy na AWS com confiança
 

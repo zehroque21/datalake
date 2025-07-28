@@ -38,8 +38,8 @@ RUN mkdir -p /var/log && \
     touch /var/log/airflow-install.log && \
     chown airflow:airflow /var/log/airflow-install.log
 
-# Copiar script de instalação MINIMAL (ultra limpo)
-COPY docker/install_airflow_minimal.sh /tmp/install_airflow.sh
+# Copiar script de instalação que funciona
+COPY docker/install_airflow.sh /tmp/install_airflow.sh
 RUN chmod +x /tmp/install_airflow.sh
 
 # Expor porta do Airflow
