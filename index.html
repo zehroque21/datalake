@@ -8,16 +8,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --secondary: #8b5cf6;
-            --accent: #06b6d4;
-            --text-dark: #1e293b;
-            --text-light: #64748b;
-            --bg-light: #f8fafc;
+            --primary: #7c8cf8;
+            --primary-dark: #5a6fd1;
+            --secondary: #b7bdfc;
+            --accent: #6ee7b7;
+            --text-dark: #2d3748;
+            --text-light: #6b7280;
+            --bg-light: #f4f7fb;
             --white: #ffffff;
-            --shadow: 0 10px 40px rgba(99, 102, 241, 0.1);
-            --shadow-hover: 0 20px 60px rgba(99, 102, 241, 0.15);
+            --shadow: 0 10px 40px rgba(124, 140, 248, 0.08);
+            --shadow-hover: 0 20px 60px rgba(124, 140, 248, 0.13);
         }
 
         * {
@@ -30,7 +30,7 @@
             font-family: 'Inter', sans-serif;
             line-height: 1.6;
             color: var(--text-dark);
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            background: linear-gradient(135deg, #e0e7ff 0%, #f4f7fb 100%);
             min-height: 100vh;
         }
 
@@ -128,7 +128,7 @@
         }
 
         .section {
-            background: var(--white);
+            background: linear-gradient(120deg, #f4f7fb 60%, #e0e7ff 100%);
             padding: 4rem 0;
             margin: 2rem 0;
             border-radius: 20px;
@@ -160,12 +160,12 @@
         }
 
         .feature-card {
-            background: var(--bg-light);
+            background: linear-gradient(120deg, #f4f7fb 80%, #e0e7ff 100%);
             padding: 2rem;
             border-radius: 15px;
             text-align: center;
             transition: all 0.3s ease;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #e0e7ef;
         }
 
         .feature-card:hover {
@@ -175,7 +175,7 @@
 
         .feature-icon {
             font-size: 3rem;
-            color: var(--primary);
+            color: var(--accent);
             margin-bottom: 1rem;
         }
 
@@ -192,8 +192,8 @@
         }
 
         .prefect-highlight {
-            background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%);
-            color: var(--white);
+            background: linear-gradient(135deg, #6ee7b7 0%, #b7bdfc 100%);
+            color: var(--text-dark);
             padding: 3rem 0;
             margin: 2rem 0;
             border-radius: 20px;
@@ -201,13 +201,13 @@
         }
 
         .prefect-highlight h2 {
-            color: var(--white);
+            color: var(--primary-dark);
             margin-bottom: 1rem;
         }
 
         .prefect-highlight p {
-            color: var(--white);
-            opacity: 0.9;
+            color: var(--text-dark);
+            opacity: 0.85;
         }
 
         .prefect-features {
@@ -218,10 +218,10 @@
         }
 
         .prefect-feature {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(236, 253, 245, 0.7);
             padding: 1.5rem;
             border-radius: 10px;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(6px);
             text-align: center;
         }
 
@@ -240,8 +240,8 @@
         }
 
         .flow-step {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            color: var(--white);
+            background: linear-gradient(135deg, #b7bdfc 0%, #6ee7b7 100%);
+            color: var(--text-dark);
             padding: 1.5rem;
             border-radius: 15px;
             text-align: center;
@@ -256,7 +256,7 @@
 
         .flow-arrow {
             font-size: 2rem;
-            color: var(--primary);
+            color: var(--accent);
         }
 
         .about {
@@ -274,8 +274,8 @@
 
         .social-link {
             display: inline-block;
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
-            color: var(--white);
+            background: linear-gradient(45deg, #b7bdfc, #6ee7b7);
+            color: var(--primary-dark);
             padding: 0.75rem;
             border-radius: 50%;
             text-decoration: none;
@@ -300,8 +300,8 @@
         }
 
         .tech-badge {
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
-            color: var(--white);
+            background: linear-gradient(45deg, #b7bdfc, #6ee7b7);
+            color: var(--primary-dark);
             padding: 0.5rem 1rem;
             border-radius: 25px;
             font-size: 0.9rem;
@@ -317,8 +317,8 @@
         }
 
         .highlight {
-            background: linear-gradient(45deg, var(--accent), var(--primary));
-            color: var(--white);
+            background: linear-gradient(45deg, #6ee7b7, #b7bdfc);
+            color: var(--primary-dark);
             padding: 0.2rem 0.5rem;
             border-radius: 5px;
             font-weight: 600;
