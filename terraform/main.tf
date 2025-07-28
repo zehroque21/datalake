@@ -98,7 +98,7 @@ resource "aws_instance" "airflow_vm" {
 
   # User data for automatic Prefect installation (using external script)
   # Updated: 2025-07-28 - Switched from Airflow to Prefect for better reliability
-  user_data = base64encode(templatefile("${path.module}/../scripts/install_prefect.sh", {}))
+  user_data = base64encode(templatefile("${path.module}/install_prefect.sh", {}))
 
   tags = {
     Name        = "Prefect VM"
