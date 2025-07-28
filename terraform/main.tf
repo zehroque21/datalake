@@ -97,7 +97,7 @@ resource "aws_instance" "airflow_vm" {
   }
 
   # User data for automatic Airflow installation (using external script)
-  # Updated: 2025-07-27 - Using minimal installation strategy that works
+  # Updated: 2025-07-28 - ULTRA-AGGRESSIVE installation with nuclear cleanup
   user_data = base64encode(templatefile("${path.module}/../scripts/install_airflow.sh", {}))
 
   tags = {
