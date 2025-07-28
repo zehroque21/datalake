@@ -27,8 +27,8 @@ RUN pip install --no-cache-dir \
     psycopg2-binary==2.9.9
 
 # Copy example flows
-COPY docker/flows/ /app/flows/
-COPY docker/prefect-entrypoint.sh /app/prefect-entrypoint.sh
+COPY flows/ /app/flows/
+COPY prefect-entrypoint.sh /app/prefect-entrypoint.sh
 
 # Make scripts executable
 RUN chmod +x /app/prefect-entrypoint.sh
