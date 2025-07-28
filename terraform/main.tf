@@ -96,12 +96,12 @@ resource "aws_instance" "airflow_vm" {
     instance_metadata_tags      = "enabled"
   }
 
-  # User data for automatic Airflow installation (using external script)
-  # Updated: 2025-07-28 - ULTRA-AGGRESSIVE installation with nuclear cleanup
-  user_data = base64encode(templatefile("${path.module}/../scripts/install_airflow.sh", {}))
+  # User data for automatic Prefect installation (using external script)
+  # Updated: 2025-07-28 - Switched from Airflow to Prefect for better reliability
+  user_data = base64encode(templatefile("${path.module}/../scripts/install_prefect.sh", {}))
 
   tags = {
-    Name        = "Airflow VM"
+    Name        = "Prefect VM"
     Environment = "production"
     Purpose     = "data-engineering"
     Security    = "hardened"
