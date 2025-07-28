@@ -1,28 +1,133 @@
+version: '3.8'
+
 services:
+  # Prefect Orchestration
   prefect-server:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    container_name: prefect-server
     ports:
       - "4200:4200"
+    volumes:
+      - prefect_data:/app/.prefect
+      - s3_data:/app/s3
     environment:
-      - PREFECT_API_URL=http://localhost:4200/api
+      - PREFECT_API_URL=http://0.0.0.0:4200/api
       - PREFECT_SERVER_API_HOST=0.0.0.0
       - PREFECT_SERVER_API_PORT=4200
+    command: /app/prefect-entrypoint.sh
+    networks:
+      - datalake
+
+  # Apache Superset - Data Visualization
+  superset:
+    image: apache/superset:latest
+    ports:
+      - "8088:8088"
     volumes:
-      - prefect_data:/app/data
-      - ./logs:/app/logs
-    entrypoint: ["/app/prefect-entrypoint.sh"]
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4200/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    restart: unless-stopped
+      - superset_data:/app/superset_home
+      - s3_data:/app/s3:ro  # Read-only access to data
+    environment:
+      - SUPERSET_CONFIG_PATH=/app/superset_home/superset_config.py
+    command: >
+      bash -c "
+        superset fab create-admin --username admin --firstname Admin --lastname User --email admin@superset.com --password admin123 &&
+        superset db upgrade &&
+        superset init &&
+        superset run -h 0.0.0.0 -p 8088 --with-threads --reload --debugger
+      "
+    depends_on:
+      - superset-db
+    networks:
+      - datalake
+
+  # Superset Database
+  superset-db:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=superset
+      - POSTGRES_USER=superset
+      - POSTGRES_PASSWORD=superset123
+    volumes:
+      - superset_db_data:/var/lib/postgresql/data
+    networks:
+      - datalake
+
+  # OpenMetadata - Data Catalog
+  openmetadata:
+    image: openmetadata/server:latest
+    ports:
+      - "8585:8585"
+    environment:
+      - OPENMETADATA_CLUSTER_NAME=datalake_cluster
+      - DB_DRIVER_CLASS=org.postgresql.Driver
+      - DB_SCHEME=postgresql
+      - DB_USE_SSL=false
+      - DB_USER=openmetadata
+      - DB_USER_PASSWORD=openmetadata123
+      - DB_HOST=openmetadata-db
+      - DB_PORT=5432
+      - DB_DATABASE=openmetadata_db
+      - ELASTICSEARCH_HOST=elasticsearch
+      - ELASTICSEARCH_PORT=9200
+    depends_on:
+      - openmetadata-db
+      - elasticsearch
+    volumes:
+      - s3_data:/app/s3:ro  # Read-only access to data
+    networks:
+      - datalake
+
+  # OpenMetadata Database
+  openmetadata-db:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=openmetadata_db
+      - POSTGRES_USER=openmetadata
+      - POSTGRES_PASSWORD=openmetadata123
+    volumes:
+      - openmetadata_db_data:/var/lib/postgresql/data
+    networks:
+      - datalake
+
+  # Elasticsearch for OpenMetadata
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.9
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - datalake
+
+  # Spark for Delta Lake processing
+  spark:
+    image: bitnami/spark:latest
+    ports:
+      - "8080:8080"  # Spark UI
+      - "7077:7077"  # Spark Master
+    environment:
+      - SPARK_MODE=master
+      - SPARK_MASTER_HOST=spark
+      - SPARK_MASTER_PORT_NUMBER=7077
+      - SPARK_MASTER_WEBUI_PORT_NUMBER=8080
+    volumes:
+      - s3_data:/app/s3
+      - ./spark-config:/opt/bitnami/spark/conf
+    networks:
+      - datalake
 
 volumes:
   prefect_data:
-    driver: local
+  superset_data:
+  superset_db_data:
+  openmetadata_db_data:
+  elasticsearch_data:
+  s3_data:
+
+networks:
+  datalake:
+    driver: bridge
 

@@ -17,11 +17,14 @@ RUN useradd -m -s /bin/bash prefect
 # Set working directory
 WORKDIR /app
 
-# Install Python dependencies (local development only)
+# Install Python dependencies
 RUN pip install --no-cache-dir \
     prefect==2.14.21 \
     pandas==2.1.4 \
     requests==2.31.0 \
+    pyspark==3.5.0 \
+    delta-spark==3.0.0 \
+    pyarrow==14.0.1 \
     sqlalchemy==2.0.23 \
     psycopg2-binary==2.9.9
 

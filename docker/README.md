@@ -1,191 +1,144 @@
-# Prefect Local Development Environment
+# Data Lake Local Development Environment
 
-This Docker environment provides a complete Prefect setup for local development with automatic pipeline execution and **local staging area** that simulates production data lake structure.
+Complete local development environment for the Data Lake project with modern data stack:
+
+## 🛠️ Technology Stack
+
+- **🌊 Orchestration:** Prefect 2.14.21
+- **📊 Visualization:** Apache Superset
+- **📚 Data Catalog:** OpenMetadata
+- **⚡ Processing:** Apache Spark with Delta Lake
+- **🗂️ Storage:** Delta Lake format (ACID transactions)
+- **🐳 Infrastructure:** Docker Compose
 
 ## 🚀 Quick Start
 
 ```bash
-# Start Prefect with automatic temperature monitoring
+# Start the complete Data Lake environment
 ./start-datalake.sh
 
-# Access Prefect UI
-open http://localhost:4200
+# Access the tools
+open http://localhost:4200  # Prefect UI
+open http://localhost:8088  # Superset (admin/admin123)
+open http://localhost:8585  # OpenMetadata
+open http://localhost:8080  # Spark UI
 ```
 
-## 💾 Local Staging Area
+## 🌐 Access Points
 
-The environment uses a **local staging area** that simulates a production data lake structure:
+| Tool | URL | Credentials | Purpose |
+|------|-----|-------------|---------|
+| **Prefect** | http://localhost:4200 | - | Workflow orchestration |
+| **Superset** | http://localhost:8088 | admin/admin123 | Data visualization & dashboards |
+| **OpenMetadata** | http://localhost:8585 | - | Data catalog & governance |
+| **Spark UI** | http://localhost:8080 | - | Spark job monitoring |
 
-### Staging Structure
+## 📁 Data Lake Architecture
+
 ```
-/app/data/staging/
-├── weather/campinas/
-│   ├── latest/
-│   │   └── temperature.json          # Latest reading
-│   ├── hourly/
-│   │   └── 2025/01/28/
-│   │       └── temperature_14.json   # Hourly readings
-│   ├── daily/
-│   │   └── 2025/01/28/
-│   │       └── temperature_history.csv # Daily aggregation
-│   ├── monthly/
-│   │   └── 2025/01/
-│   │       └── summary.json          # Monthly statistics
-│   └── raw/
-│       └── 20250128_143022.json      # Raw timestamped data
+/app/s3/
+├── staging/     # 📥 Raw data as received (JSON/CSV)
+├── raw/         # 🗂️ Delta Lake tables (validated data)
+├── trusted/     # ✅ Processed and enriched data
+└── refined/     # 📊 Analytics-ready aggregations
 ```
-
-### Benefits of Staging Approach
-- **S3-like structure** for production readiness
-- **Multiple data formats** (JSON, CSV) for different use cases
-- **Time-based partitioning** for efficient data organization
-- **Local development** without cloud dependencies
-- **Easy migration** to real S3 when ready
 
 ## 🌡️ Temperature Pipeline
 
-The automatic temperature monitoring pipeline:
+Automated pipeline that:
+- Collects real-time temperature data for Campinas, SP
+- Validates data quality
+- Stores in staging (JSON) and raw (Delta Lake)
+- Runs every 30 minutes automatically
+- Provides metadata and lineage tracking
 
-### Features
-- **Real weather data** from Campinas, SP, Brazil
-- **Data validation** and quality scoring
-- **Multiple storage formats** (latest, hourly, daily, monthly, raw)
-- **S3-like organization** for production readiness
-- **Error handling** with fallback mock data
-- **Summary statistics** and monitoring
-
-### Pipeline Flow
-1. **Fetch** current temperature from wttr.in API
-2. **Validate** and clean the data
-3. **Create** staging directory structure
-4. **Store** in multiple formats and locations
-5. **Generate** summary statistics
-
-## 📊 Data Access
+## 🔍 Useful Commands
 
 ```bash
-# View latest temperature reading
-docker compose exec prefect-server cat /app/data/staging/weather/campinas/latest/temperature.json
-
-# View daily temperature history
-docker compose exec prefect-server head /app/data/staging/weather/campinas/daily/*/temperature_history.csv
-
-# View staging structure
-docker compose exec prefect-server find /app/data/staging -type f
-
-# View monthly summary
-docker compose exec prefect-server cat /app/data/staging/weather/campinas/monthly/*/summary.json
-
-# View container logs
-docker compose logs -f
-```
-
-## 🔧 Development Workflow
-
-### Single Flows Directory
-
-- **No confusion**: Only one `flows/` directory in the root
-- **Shared structure**: Same flows can be deployed to cloud later
-- **Organized by purpose**: Flows categorized logically
-
-```
-flows/
-├── weather/                           # Weather-related pipelines
-│   ├── campinas_temperature.py       # Simple local storage
-│   ├── campinas_temperature_staging.py # S3-like staging structure
-│   └── deploy_temperature_flow.py    # Auto-deployment script
-├── examples/                          # Tutorial flows
-├── etl/                              # Production ETL pipelines
-├── ml/                               # Machine Learning workflows
-└── monitoring/                       # Data quality monitoring
-```
-
-### Making Changes
-
-1. **Edit flows** directly in `flows/` directory
-2. **Test locally** with Docker
-3. **Commit changes** - same flows can deploy to cloud later
-4. **No sync needed** - single source of truth
-
-## 🐳 Docker Commands
-
-```bash
-# Start environment
-./start-datalake.sh
-
-# Stop environment  
-docker compose down
-
-# Rebuild after changes
-docker compose down -v
-docker compose build --no-cache
-docker compose up -d
-
-# View logs
+# View pipeline logs
 docker compose logs -f prefect-server
 
-# Access container shell
-docker compose exec prefect-server bash
+# Check latest temperature data
+docker compose exec prefect-server cat /app/s3/staging/weather/campinas_temperature_latest.json
+
+# View Delta table metadata
+docker compose exec prefect-server cat /app/s3/raw/weather/campinas_temperature_metadata.json
+
+# Explore S3 structure
+docker compose exec prefect-server find /app/s3 -type f
+
+# Stop environment
+docker compose down
 ```
 
-## 🌐 Prefect UI Features
+## 🗂️ Delta Lake Benefits
 
-Access http://localhost:4200 to see:
+- **ACID Transactions:** Reliable data operations
+- **Time Travel:** Query historical versions
+- **Schema Evolution:** Automatic schema updates
+- **Unified Batch/Stream:** Single format for all data
+- **Metadata:** Rich table statistics and lineage
 
-- **Flow runs** in real-time
-- **Temperature data** visualization  
-- **Pipeline logs** and debugging
-- **Scheduling** management
-- **Data quality** monitoring
+## 📊 Data Visualization
 
-## 📈 Pipeline Monitoring
+### Superset Setup
+1. Access http://localhost:8088
+2. Login with admin/admin123
+3. Connect to Delta tables via Spark SQL
+4. Create dashboards for temperature monitoring
 
-The temperature pipeline provides:
+### OpenMetadata Setup
+1. Access http://localhost:8585
+2. Discover datasets automatically
+3. View data lineage and quality metrics
+4. Manage data governance policies
 
-- **Current conditions** for Campinas
-- **Historical trends** and statistics
-- **Data quality scores** and validation
-- **Automatic error recovery** with mock data
-- **Summary reports** with key metrics
-- **Staging area** with production-like structure
+## 🔄 Development Workflow
 
-## 🔄 Automatic Features
+1. **Develop:** Edit flows in `/flows/` directory
+2. **Test:** Run `./start-datalake.sh` to test locally
+3. **Monitor:** Use Prefect UI to track pipeline execution
+4. **Visualize:** Create dashboards in Superset
+5. **Govern:** Manage metadata in OpenMetadata
 
-When Docker starts:
+## 🐳 Docker Services
 
-1. ✅ **Prefect server** starts automatically
-2. ✅ **Worker pool** created and started  
-3. ✅ **Temperature pipeline** runs immediately
-4. ✅ **Scheduled execution** every 30 minutes
-5. ✅ **Staging area** created with S3-like structure
-6. ✅ **Data persistence** across container restarts
-7. ✅ **Health checks** and monitoring
+- **prefect-server:** Main orchestration engine
+- **superset:** Data visualization platform
+- **superset-db:** PostgreSQL for Superset
+- **openmetadata:** Data catalog service
+- **openmetadata-db:** PostgreSQL for OpenMetadata
+- **elasticsearch:** Search engine for metadata
+- **spark:** Processing engine for Delta Lake
+
+## 📈 Monitoring
+
+- **Pipeline Health:** Prefect UI dashboard
+- **Data Quality:** OpenMetadata quality metrics
+- **Performance:** Spark UI for job monitoring
+- **Visualization:** Superset dashboards
+
+## 🔧 Troubleshooting
+
+```bash
+# Restart specific service
+docker compose restart prefect-server
+
+# View service logs
+docker compose logs superset
+
+# Clean restart
+docker compose down -v && ./start-datalake.sh
+
+# Check service health
+docker compose ps
+```
 
 ## 🎯 Next Steps
 
-1. **View the UI** at http://localhost:4200
-2. **Check temperature data** in staging area
-3. **Explore staging structure** with find commands
-4. **Create new flows** in `flows/` directory
-5. **Deploy to cloud** when ready (currently disabled)
-
-## 🚫 AWS Deployment Disabled
-
-AWS deployment via GitHub Actions is **temporarily disabled** for local development focus. The infrastructure code remains available for future use.
-
-To re-enable AWS deployment:
-1. Uncomment the workflow in `.github/workflows/terraform.yaml`
-2. Configure GitHub secrets for AWS credentials
-3. Push changes to trigger deployment
-
-## 💡 Production Migration
-
-When ready for production, the staging structure makes it easy to:
-
-1. **Replace local paths** with S3 URLs
-2. **Add AWS credentials** and boto3 integration  
-3. **Keep same directory structure** in S3
-4. **Minimal code changes** required
-
-The environment is designed to be **zero-configuration** for local development while maintaining **production readiness**!
+1. Add more data sources to the pipeline
+2. Create trusted layer transformations
+3. Build refined layer aggregations
+4. Develop business intelligence dashboards
+5. Implement data quality monitoring
 
