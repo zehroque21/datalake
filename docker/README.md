@@ -6,7 +6,7 @@ This Docker environment provides a complete Prefect setup for local development 
 
 ```bash
 # Start Prefect with automatic temperature monitoring
-./test-prefect.sh
+./start-datalake.sh
 
 # Access Prefect UI
 open http://localhost:4200
@@ -111,7 +111,7 @@ flows/
 
 ```bash
 # Start environment
-./test-prefect.sh
+./start-datalake.sh
 
 # Stop environment  
 docker compose down

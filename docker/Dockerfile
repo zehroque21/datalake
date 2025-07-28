@@ -30,7 +30,7 @@ RUN pip install --no-cache-dir griffe==0.38.1
 
 # Copy flows from parent directory (using correct Docker build context)
 COPY flows/ /app/flows/
-COPY prefect-entrypoint.sh /app/prefect-entrypoint.sh
+COPY docker/prefect-entrypoint.sh /app/prefect-entrypoint.sh
 
 # Make scripts executable
 RUN chmod +x /app/prefect-entrypoint.sh

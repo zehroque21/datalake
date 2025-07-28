@@ -1,13 +1,13 @@
 #!/bin/bash
 
-echo "🌊 Testing Prefect Environment with Campinas Temperature Pipeline..."
+echo "🏗️ Starting Data Lake Environment with Prefect Orchestration..."
 
 # Stop any existing containers
 echo "🛑 Stopping existing containers..."
-docker compose down -v
+docker compose down --remove-orphans
 
 # Build and start
-echo "🔨 Building and starting Prefect environment..."
+echo "🔨 Building and starting Data Lake environment..."
 docker compose build
 docker compose up -d
 
@@ -47,7 +47,7 @@ echo "📋 Container status:"
 docker compose ps
 
 echo ""
-echo "🎉 Prefect environment is running!"
+echo "🎉 Data Lake environment is running!"
 echo "🌐 Access Prefect UI at: http://localhost:4200"
 echo "🌡️ Temperature pipeline is collecting data automatically"
 echo ""
