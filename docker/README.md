@@ -1,182 +1,131 @@
-# 🌊 Prefect Data Orchestration Environment
+# Prefect Local Development Environment
 
-Este ambiente Docker permite testar o Prefect localmente para orquestração de pipelines de dados.
+This Docker environment provides a complete Prefect setup for local development with automatic pipeline execution.
 
-## 🚀 Como Usar
-
-### Pré-requisitos
-- Docker Desktop instalado e rodando
-- Git para clonar o repositório
-
-### Comandos Básicos
+## 🚀 Quick Start
 
 ```bash
-# Clonar repositório
-git clone https://github.com/zehroque21/datalake.git
-cd datalake/docker
-
-# Executar teste automatizado
+# Start Prefect with automatic temperature monitoring
 ./test-prefect.sh
 
-# Acessar Prefect UI
-# URL: http://localhost:4200
+# Access Prefect UI
+open http://localhost:4200
 ```
 
-### Comandos Manuais
+## 🌡️ Automatic Temperature Pipeline
+
+When you start the Docker environment, it automatically:
+
+1. **Starts Prefect server** on port 4200
+2. **Runs temperature pipeline** immediately 
+3. **Schedules recurring runs** every 30 minutes
+4. **Stores data** in persistent volumes
+
+### Pipeline Features
+
+- **Real weather data** from Campinas, SP, Brazil
+- **Data validation** and quality scoring
+- **Persistent storage** in CSV and JSON formats
+- **Summary statistics** and monitoring
+- **Error handling** with fallback mock data
+
+## 📊 Data Access
 
 ```bash
-# Construir e iniciar
-docker compose build
+# View latest temperature reading
+docker compose exec prefect-server cat /app/data/campinas_temperature_latest.json
+
+# View temperature history
+docker compose exec prefect-server head /app/data/campinas_temperature_history.csv
+
+# View container logs
+docker compose logs -f
+```
+
+## 🔧 Development Workflow
+
+### Single Flows Directory
+
+- **No more confusion**: Only one `flows/` directory in the root
+- **Shared between local and cloud**: Same flows run everywhere
+- **Organized structure**: Flows categorized by purpose
+
+```
+flows/
+├── weather/                    # Weather-related pipelines
+│   ├── campinas_temperature.py # Main temperature pipeline
+│   └── deploy_temperature_flow.py # Auto-deployment script
+├── examples/                   # Tutorial flows
+├── etl/                       # Production ETL pipelines
+├── ml/                        # Machine Learning workflows
+└── monitoring/                # Data quality monitoring
+```
+
+### Making Changes
+
+1. **Edit flows** directly in `flows/` directory
+2. **Test locally** with Docker
+3. **Commit changes** - same flows deploy to cloud
+4. **No sync needed** - single source of truth
+
+## 🐳 Docker Commands
+
+```bash
+# Start environment
+./test-prefect.sh
+
+# Stop environment  
+docker compose down
+
+# Rebuild after changes
+docker compose down -v
+docker compose build --no-cache
 docker compose up -d
 
-# Verificar status
-docker compose ps
-
-# Ver logs
+# View logs
 docker compose logs -f prefect-server
-docker compose logs -f prefect-agent
 
-# Parar e limpar
-docker compose down
-```
-
-## 📋 Arquivos
-
-- **`Dockerfile`** - Imagem Python com Prefect
-- **`docker-compose.yml`** - Prefect server + agent
-- **`flows/`** - Exemplos de pipelines de dados
-- **`test-prefect.sh`** - Script automatizado de teste
-- **`prefect-entrypoint.sh`** - Script de inicialização
-
-## 🧪 Exemplos de Flows
-
-### 1. Pipeline Básico de ETL
-```python
-# flows/example_data_pipeline.py
-@flow
-def data_lake_etl():
-    raw_data = extract_sample_data()
-    clean_data = transform_data(raw_data)
-    load_result = load_data_to_lake(clean_data)
-    return load_result
-```
-
-### 2. Integração AWS
-```python
-# flows/aws_integration_example.py
-@flow
-def aws_data_lake_flow():
-    buckets = list_s3_buckets()
-    s3_result = simulate_s3_upload(data)
-    lambda_result = trigger_lambda_function(s3_result)
-    return catalog_entry
-```
-
-## 🎯 Testando Flows
-
-### Via Interface Web
-1. Acesse http://localhost:4200
-2. Vá para "Deployments"
-3. Execute os flows disponíveis
-
-### Via Linha de Comando
-```bash
-# Entrar no container
+# Access container shell
 docker compose exec prefect-server bash
-
-# Executar flow diretamente
-python /app/flows/example_data_pipeline.py
-
-# Criar deployment
-prefect deployment build /app/flows/example_data_pipeline.py:data_lake_etl -n "etl-deployment"
-prefect deployment apply data_lake_etl-deployment.yaml
-
-# Executar deployment
-prefect deployment run 'data_lake_etl/etl-deployment'
 ```
 
-## 🔧 Configuração
+## 🌐 Prefect UI Features
 
-### Variáveis de Ambiente
-```bash
-PREFECT_API_URL=http://localhost:4200/api
-PREFECT_SERVER_API_HOST=0.0.0.0
-PREFECT_SERVER_API_PORT=4200
-```
+Access http://localhost:4200 to see:
 
-### Volumes
-- `prefect_data:/app/.prefect` - Dados do Prefect
-- `./flows:/app/flows` - Flows locais (desenvolvimento)
+- **Flow runs** in real-time
+- **Temperature data** visualization  
+- **Pipeline logs** and debugging
+- **Scheduling** management
+- **Data quality** monitoring
 
-## 📊 Interface Web
+## 📈 Pipeline Monitoring
 
-### Dashboard Principal
-- **URL:** http://localhost:4200
-- **Flows:** Visualizar e executar pipelines
-- **Runs:** Histórico de execuções
-- **Logs:** Logs detalhados em tempo real
-- **Work Pools:** Gerenciamento de workers
+The temperature pipeline provides:
 
-### Recursos da UI
-- ✅ **Flow Runs** - Execuções em tempo real
-- ✅ **Logs Streaming** - Logs ao vivo
-- ✅ **Task Dependencies** - Visualização de DAG
-- ✅ **Scheduling** - Agendamento de flows
-- ✅ **Notifications** - Alertas e notificações
+- **Current conditions** for Campinas
+- **Historical trends** and statistics
+- **Data quality scores** and validation
+- **Automatic error recovery** with mock data
+- **Summary reports** with key metrics
 
-## 🎯 Vantagens do Prefect
+## 🔄 Automatic Features
 
-### vs Airflow
-- ✅ **Instalação simples** - Sem dependency hell
-- ✅ **UI moderna** - Interface mais intuitiva
-- ✅ **Python-first** - Código mais limpo
-- ✅ **Debugging fácil** - Logs claros e estruturados
-- ✅ **Desenvolvimento local** - Execução sem servidor
+When Docker starts:
 
-### Recursos Avançados
-- 🔄 **Retry automático** com backoff
-- 📊 **Observabilidade** completa
-- 🔒 **Secrets management** integrado
-- ☁️ **Cloud-native** por design
-- 🚀 **Deployment flexível**
+1. ✅ **Prefect server** starts automatically
+2. ✅ **Worker pool** created and started  
+3. ✅ **Temperature pipeline** runs immediately
+4. ✅ **Scheduled execution** every 30 minutes
+5. ✅ **Data persistence** across container restarts
+6. ✅ **Health checks** and monitoring
 
-## 🚀 Próximos Passos
+## 🎯 Next Steps
 
-Após testar localmente:
-1. ✅ **Validar interface** e usabilidade
-2. ✅ **Testar flows** de exemplo
-3. ✅ **Criar pipelines** customizados
-4. ✅ **Deploy na AWS** se aprovado
+1. **View the UI** at http://localhost:4200
+2. **Check temperature data** in `/app/data/`
+3. **Create new flows** in `flows/` directory
+4. **Deploy to cloud** via GitHub Actions
 
-## 🐛 Troubleshooting
-
-### Problemas Comuns
-```bash
-# Prefect server não inicia
-docker compose logs prefect-server
-
-# Agent não conecta
-docker compose logs prefect-agent
-
-# Porta 4200 ocupada
-docker compose down && docker compose up -d
-
-# Reset completo
-docker compose down -v && docker compose up -d
-```
-
-### Comandos de Debug
-```bash
-# Status dos containers
-docker compose ps
-
-# Logs em tempo real
-docker compose logs -f
-
-# Entrar no container
-docker compose exec prefect-server bash
-
-# Verificar conectividade
-curl http://localhost:4200/api/health
-```
+The environment is designed to be **zero-configuration** - just run `./test-prefect.sh` and start building!
 

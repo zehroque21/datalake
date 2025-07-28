@@ -29,8 +29,8 @@ RUN pip install --no-cache-dir \
 # Fix griffe version conflict (Prefect installs 1.8.0 but needs 0.38.1)
 RUN pip install --no-cache-dir griffe==0.38.1
 
-# Copy example flows
-COPY flows/ /app/flows/
+# Copy flows from parent directory
+COPY ../flows/ /app/flows/
 COPY prefect-entrypoint.sh /app/prefect-entrypoint.sh
 
 # Make scripts executable

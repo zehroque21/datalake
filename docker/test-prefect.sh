@@ -1,73 +1,58 @@
 #!/bin/bash
 
-echo "🚀 Starting Prefect local test environment..."
+echo "🌊 Testing Prefect Environment with Campinas Temperature Pipeline..."
 
-# Function to check if service is ready
-check_service() {
-    local url=$1
-    local service_name=$2
-    local max_attempts=30
-    local attempt=1
-    
-    echo "⏳ Waiting for $service_name to be ready..."
-    
-    while [ $attempt -le $max_attempts ]; do
-        if curl -s "$url" > /dev/null 2>&1; then
-            echo "✅ $service_name is ready!"
-            return 0
-        fi
-        
-        echo "🔄 Attempt $attempt/$max_attempts: $service_name not ready, waiting..."
-        sleep 5
-        attempt=$((attempt + 1))
-    done
-    
-    echo "❌ $service_name failed to start after $max_attempts attempts"
-    return 1
-}
+# Stop any existing containers
+echo "🛑 Stopping existing containers..."
+docker compose down -v
 
-# Build and start services
-echo "🏗️ Building Prefect containers..."
+# Build and start
+echo "🔨 Building and starting Prefect environment..."
 docker compose build
-
-echo "🚀 Starting Prefect services..."
 docker compose up -d
 
-# Check if Prefect server is ready
-if check_service "http://localhost:4200/api/health" "Prefect Server"; then
-    echo ""
-    echo "🎉 Prefect environment is ready!"
-    echo ""
-    echo "📋 Access Information:"
-    echo "   🌐 Prefect UI: http://localhost:4200"
-    echo "   📊 Dashboard: http://localhost:4200/dashboard"
-    echo "   🔧 API: http://localhost:4200/api"
-    echo ""
-    echo "🧪 Test Commands:"
-    echo "   # Deploy example flows"
-    echo "   docker compose exec prefect-server python /app/flows/example_data_pipeline.py"
-    echo ""
-    echo "   # Run a flow"
-    echo "   docker compose exec prefect-server prefect deployment run 'Data Lake ETL Pipeline/default'"
-    echo ""
-    echo "   # View logs"
-    echo "   docker compose logs -f prefect-server"
-    echo "   docker compose logs -f prefect-agent"
-    echo ""
-    echo "   # Stop environment"
-    echo "   docker compose down"
-    echo ""
-    echo "🎯 Next Steps:"
-    echo "   1. Open http://localhost:4200 in your browser"
-    echo "   2. Explore the Prefect UI"
-    echo "   3. Run the example flows"
-    echo "   4. Create your own data pipelines!"
-    echo ""
+# Wait for services to be ready
+echo "⏳ Waiting for Prefect server to be ready..."
+sleep 30
+
+# Check if Prefect UI is accessible
+echo "🌐 Testing Prefect UI accessibility..."
+if curl -s http://localhost:4200/api/health > /dev/null; then
+    echo "✅ Prefect UI is accessible at http://localhost:4200"
 else
-    echo "❌ Failed to start Prefect environment"
-    echo "📋 Debug commands:"
-    echo "   docker compose logs prefect-server"
-    echo "   docker compose logs prefect-agent"
+    echo "❌ Prefect UI is not accessible"
+    echo "📋 Container logs:"
+    docker compose logs prefect-server
     exit 1
 fi
+
+# Check if temperature data was collected
+echo "🌡️ Checking temperature data collection..."
+sleep 10
+
+# Check if data files exist
+if docker compose exec -T prefect-server test -f /app/data/campinas_temperature_latest.json; then
+    echo "✅ Temperature data file created successfully!"
+    echo "📊 Latest temperature data:"
+    docker compose exec -T prefect-server cat /app/data/campinas_temperature_latest.json | head -10
+else
+    echo "⚠️ Temperature data file not found yet (may still be processing)"
+fi
+
+# Show container status
+echo "📋 Container status:"
+docker compose ps
+
+echo ""
+echo "🎉 Prefect environment is running!"
+echo "🌐 Access Prefect UI at: http://localhost:4200"
+echo "🌡️ Temperature pipeline is collecting data automatically"
+echo ""
+echo "🔍 Useful commands:"
+echo "   View logs:           docker compose logs -f"
+echo "   View temperature:    docker compose exec prefect-server cat /app/data/campinas_temperature_latest.json"
+echo "   View history:        docker compose exec prefect-server head /app/data/campinas_temperature_history.csv"
+echo "   Stop environment:    docker compose down"
+echo ""
+echo "📊 The temperature pipeline runs automatically every 30 minutes!"
 

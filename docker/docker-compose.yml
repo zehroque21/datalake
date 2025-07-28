@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   prefect-server:
     build: .
@@ -5,38 +7,22 @@ services:
     ports:
       - "4200:4200"
     environment:
-      - PREFECT_API_URL=http://0.0.0.0:4200/api
+      - PREFECT_API_URL=http://localhost:4200/api
       - PREFECT_SERVER_API_HOST=0.0.0.0
       - PREFECT_SERVER_API_PORT=4200
-    command: prefect server start --host 0.0.0.0 --port 4200
     volumes:
-      - prefect_data:/app/.prefect
-    networks:
-      - prefect-network
-
-  prefect-agent:
-    build: .
-    container_name: prefect-agent
-    depends_on:
-      - prefect-server
-    environment:
-      - PREFECT_API_URL=http://prefect-server:4200/api
-    command: >
-      sh -c "
-        sleep 10 &&
-        prefect work-pool create --type process default-pool &&
-        prefect worker start --pool default-pool
-      "
-    volumes:
-      - prefect_data:/app/.prefect
-      - ./flows:/app/flows
-    networks:
-      - prefect-network
+      - prefect_data:/app/data
+      - ./logs:/app/logs
+    entrypoint: ["/app/prefect-entrypoint.sh"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4200/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
 
 volumes:
   prefect_data:
-
-networks:
-  prefect-network:
-    driver: bridge
+    driver: local
 
