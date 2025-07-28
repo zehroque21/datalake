@@ -20,12 +20,14 @@ WORKDIR /app
 # Install Prefect and common data tools
 RUN pip install --no-cache-dir \
     prefect==2.14.21 \
-    griffe==0.38.1 \
     pandas==2.1.4 \
     boto3==1.34.0 \
     requests==2.31.0 \
     sqlalchemy==2.0.23 \
     psycopg2-binary==2.9.9
+
+# Fix griffe version conflict (Prefect installs 1.8.0 but needs 0.38.1)
+RUN pip install --no-cache-dir griffe==0.38.1
 
 # Copy example flows
 COPY flows/ /app/flows/
