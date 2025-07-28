@@ -42,19 +42,19 @@ WORKER_PID=$!
 # Wait a bit for worker to start
 sleep 5
 
-# Run the temperature pipeline immediately on startup
-echo "🌡️ Running initial Campinas Temperature Pipeline..."
+# Run the temperature pipeline immediately on startup (using staging version)
+echo "🌡️ Running initial Campinas Temperature Pipeline (Local Staging)..."
 cd /app/flows
 python -c "
 import sys
 sys.path.append('/app/flows')
-from weather.campinas_temperature import campinas_temperature_pipeline
+from weather.campinas_temperature_staging import campinas_temperature_staging_pipeline
 try:
-    result = campinas_temperature_pipeline()
+    result = campinas_temperature_staging_pipeline()
     print(f'🎉 Initial pipeline completed: {result[\"pipeline_status\"]}')
     print(f'🌡️ Temperature: {result[\"temperature_celsius\"]}°C')
     print(f'🌤️ Weather: {result[\"weather_description\"]}')
-    print(f'📊 Data saved to: {result[\"table_path\"]}')
+    print(f'💾 Data saved to staging: {result[\"staging_info\"][\"staging_base\"]}')
 except Exception as e:
     print(f'❌ Pipeline error: {e}')
 "

@@ -1,9 +1,0 @@
-# Environment files with sensitive data
-.env
-
-# Docker logs
-logs/
-
-# Local data
-data/
-

@@ -1,18 +1,18 @@
 """
-Campinas Temperature Pipeline with S3 Storage
-Collects temperature data from Campinas and stores in AWS S3 bucket
+Campinas Temperature Pipeline with Local Staging (Simulating S3 Structure)
+Collects temperature data from Campinas and stores in local file system
+with S3-like directory structure for staging purposes
 """
 
 import pandas as pd
 import requests
-import boto3
+import os
 from datetime import datetime, timedelta
 from prefect import flow, task
 from prefect.tasks import task_input_hash
 import json
-import os
 from typing import Dict, Any
-from io import StringIO
+from pathlib import Path
 
 
 @task(cache_key_fn=task_input_hash, cache_expiration=timedelta(minutes=10))
@@ -130,95 +130,78 @@ def validate_temperature_data(data: Dict[str, Any]) -> Dict[str, Any]:
 
 
 @task
-def get_s3_client():
-    """Get S3 client with credentials from environment or AWS profile"""
-    print("🔐 Initializing S3 client...")
+def create_staging_directories() -> str:
+    """Create staging directory structure simulating S3 bucket organization"""
+    print("📁 Creating staging directory structure...")
     
-    try:
-        # Try to use environment variables first
-        if os.getenv('AWS_ACCESS_KEY_ID') and os.getenv('AWS_SECRET_ACCESS_KEY'):
-            print("   Using AWS credentials from environment variables")
-            s3_client = boto3.client(
-                's3',
-                aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-                aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
-                region_name=os.getenv('AWS_REGION', 'us-east-1')
-            )
-        else:
-            # Fall back to AWS profile or IAM role
-            print("   Using AWS credentials from profile/IAM role")
-            s3_client = boto3.client('s3', region_name=os.getenv('AWS_REGION', 'us-east-1'))
-        
-        # Test connection
-        s3_client.list_buckets()
-        print("✅ S3 client initialized successfully")
-        return s3_client
-        
-    except Exception as e:
-        print(f"❌ Error initializing S3 client: {e}")
-        print("💡 Make sure AWS credentials are configured:")
-        print("   - Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables, OR")
-        print("   - Configure AWS CLI with 'aws configure', OR")
-        print("   - Use IAM roles if running on EC2")
-        raise
+    # Base staging directory (simulating S3 bucket)
+    staging_base = "/app/data/staging"
+    
+    # Create directory structure similar to S3
+    directories = [
+        f"{staging_base}/weather/campinas/latest",
+        f"{staging_base}/weather/campinas/hourly",
+        f"{staging_base}/weather/campinas/daily",
+        f"{staging_base}/weather/campinas/monthly",
+        f"{staging_base}/weather/campinas/raw"
+    ]
+    
+    for directory in directories:
+        Path(directory).mkdir(parents=True, exist_ok=True)
+    
+    print(f"✅ Staging directories created at: {staging_base}")
+    return staging_base
 
 
 @task
-def load_to_s3_bucket(data: Dict[str, Any], s3_client) -> Dict[str, str]:
-    """Load temperature data to S3 bucket"""
-    print("☁️ Loading temperature data to S3...")
+def load_to_staging(data: Dict[str, Any], staging_base: str) -> Dict[str, str]:
+    """Load temperature data to local staging area with S3-like structure"""
+    print("💾 Loading temperature data to staging area...")
     
     try:
-        # Configuration
-        bucket_name = os.getenv('S3_BUCKET_NAME', 'datalake-amadoroque-bucket')
-        
-        # Generate file paths
+        # Generate file paths with S3-like structure
         timestamp = datetime.now()
         date_str = timestamp.strftime('%Y/%m/%d')
         hour_str = timestamp.strftime('%H')
+        month_str = timestamp.strftime('%Y/%m')
         
-        # Paths for different file types
+        # Paths for different file types (simulating S3 structure)
         paths = {
-            'latest_json': 'weather/campinas/latest/temperature.json',
-            'hourly_json': f'weather/campinas/hourly/{date_str}/temperature_{hour_str}.json',
-            'daily_csv': f'weather/campinas/daily/{date_str}/temperature_history.csv'
+            'latest_json': f'{staging_base}/weather/campinas/latest/temperature.json',
+            'hourly_json': f'{staging_base}/weather/campinas/hourly/{date_str}/temperature_{hour_str}.json',
+            'daily_csv': f'{staging_base}/weather/campinas/daily/{date_str}/temperature_history.csv',
+            'monthly_summary': f'{staging_base}/weather/campinas/monthly/{month_str}/summary.json',
+            'raw_json': f'{staging_base}/weather/campinas/raw/{timestamp.strftime("%Y%m%d_%H%M%S")}.json'
         }
         
+        # Create subdirectories as needed
+        for path in paths.values():
+            Path(path).parent.mkdir(parents=True, exist_ok=True)
+        
         # 1. Save latest reading as JSON
-        print(f"📄 Saving latest reading to: s3://{bucket_name}/{paths['latest_json']}")
-        s3_client.put_object(
-            Bucket=bucket_name,
-            Key=paths['latest_json'],
-            Body=json.dumps(data, indent=2),
-            ContentType='application/json',
-            Metadata={
-                'source': 'campinas-temperature-pipeline',
-                'timestamp': data['timestamp'],
-                'temperature': str(data['temperature_celsius']),
-                'weather': data['weather_description']
-            }
-        )
+        print(f"📄 Saving latest reading: {paths['latest_json']}")
+        with open(paths['latest_json'], 'w') as f:
+            json.dump(data, f, indent=2)
         
         # 2. Save hourly reading as JSON
-        print(f"📄 Saving hourly reading to: s3://{bucket_name}/{paths['hourly_json']}")
-        s3_client.put_object(
-            Bucket=bucket_name,
-            Key=paths['hourly_json'],
-            Body=json.dumps(data, indent=2),
-            ContentType='application/json'
-        )
+        print(f"📄 Saving hourly reading: {paths['hourly_json']}")
+        with open(paths['hourly_json'], 'w') as f:
+            json.dump(data, f, indent=2)
         
-        # 3. Append to daily CSV (read existing, append, write back)
-        print(f"📊 Updating daily CSV: s3://{bucket_name}/{paths['daily_csv']}")
+        # 3. Save raw data with timestamp
+        print(f"📄 Saving raw data: {paths['raw_json']}")
+        with open(paths['raw_json'], 'w') as f:
+            json.dump(data, f, indent=2)
         
-        try:
-            # Try to read existing CSV
-            response = s3_client.get_object(Bucket=bucket_name, Key=paths['daily_csv'])
-            existing_csv = response['Body'].read().decode('utf-8')
-            df_existing = pd.read_csv(StringIO(existing_csv))
+        # 4. Append to daily CSV (read existing, append, write back)
+        print(f"📊 Updating daily CSV: {paths['daily_csv']}")
+        
+        if os.path.exists(paths['daily_csv']):
+            # Read existing CSV
+            df_existing = pd.read_csv(paths['daily_csv'])
             print(f"   Found existing CSV with {len(df_existing)} records")
-        except s3_client.exceptions.NoSuchKey:
-            # File doesn't exist, create new DataFrame
+        else:
+            # Create new DataFrame
             df_existing = pd.DataFrame()
             print("   Creating new daily CSV file")
         
@@ -234,50 +217,62 @@ def load_to_s3_bucket(data: Dict[str, Any], s3_client) -> Dict[str, str]:
             df_combined = df_new
         
         # Save updated CSV
-        csv_buffer = StringIO()
-        df_combined.to_csv(csv_buffer, index=False)
+        df_combined.to_csv(paths['daily_csv'], index=False)
         
-        s3_client.put_object(
-            Bucket=bucket_name,
-            Key=paths['daily_csv'],
-            Body=csv_buffer.getvalue(),
-            ContentType='text/csv'
-        )
+        # 5. Update monthly summary
+        print(f"📈 Updating monthly summary: {paths['monthly_summary']}")
+        monthly_summary = {
+            'month': month_str,
+            'total_records': len(df_combined),
+            'avg_temperature': round(df_combined['temperature_celsius'].mean(), 2),
+            'min_temperature': float(df_combined['temperature_celsius'].min()),
+            'max_temperature': float(df_combined['temperature_celsius'].max()),
+            'avg_humidity': round(df_combined['humidity'].mean(), 1),
+            'last_updated': datetime.now().isoformat(),
+            'data_quality_avg': round(df_combined['data_quality_score'].mean(), 1)
+        }
         
-        print(f"✅ Temperature data saved to S3:")
-        print(f"   📄 Latest JSON: s3://{bucket_name}/{paths['latest_json']}")
-        print(f"   📄 Hourly JSON: s3://{bucket_name}/{paths['hourly_json']}")
-        print(f"   📊 Daily CSV: s3://{bucket_name}/{paths['daily_csv']} ({len(df_combined)} records)")
+        with open(paths['monthly_summary'], 'w') as f:
+            json.dump(monthly_summary, f, indent=2)
+        
+        print(f"✅ Temperature data saved to staging:")
+        print(f"   📄 Latest: {paths['latest_json']}")
+        print(f"   📄 Hourly: {paths['hourly_json']}")
+        print(f"   📊 Daily CSV: {paths['daily_csv']} ({len(df_combined)} records)")
+        print(f"   📈 Monthly: {paths['monthly_summary']}")
+        print(f"   📄 Raw: {paths['raw_json']}")
         
         return {
-            'bucket': bucket_name,
+            'staging_base': staging_base,
             'latest_json': paths['latest_json'],
             'hourly_json': paths['hourly_json'],
             'daily_csv': paths['daily_csv'],
+            'monthly_summary': paths['monthly_summary'],
+            'raw_json': paths['raw_json'],
             'total_records': len(df_combined)
         }
         
     except Exception as e:
-        print(f"❌ Error saving to S3: {e}")
+        print(f"❌ Error saving to staging: {e}")
         raise
 
 
 @task
-def generate_s3_summary(s3_client, bucket_info: Dict[str, str]) -> Dict[str, Any]:
-    """Generate summary from S3 stored data"""
-    print("📈 Generating temperature summary from S3...")
+def generate_staging_summary(staging_info: Dict[str, str]) -> Dict[str, Any]:
+    """Generate summary from staging area data"""
+    print("📈 Generating temperature summary from staging area...")
     
     try:
-        bucket_name = bucket_info['bucket']
-        csv_key = bucket_info['daily_csv']
+        csv_path = staging_info['daily_csv']
         
-        # Read CSV from S3
-        response = s3_client.get_object(Bucket=bucket_name, Key=csv_key)
-        csv_content = response['Body'].read().decode('utf-8')
-        df = pd.read_csv(StringIO(csv_content))
+        if not os.path.exists(csv_path):
+            return {"error": "No temperature data found in staging"}
+        
+        # Read CSV from staging
+        df = pd.read_csv(csv_path)
         
         if df.empty:
-            return {"error": "No temperature data found in S3"}
+            return {"error": "No temperature data found in CSV"}
         
         # Convert timestamp to datetime
         df['timestamp'] = pd.to_datetime(df['timestamp'])
@@ -285,7 +280,13 @@ def generate_s3_summary(s3_client, bucket_info: Dict[str, str]) -> Dict[str, Any
         # Calculate summary statistics
         summary = {
             'total_records': len(df),
-            'data_source': f"s3://{bucket_name}/{csv_key}",
+            'data_source': f"staging://{csv_path}",
+            'staging_structure': {
+                'base_path': staging_info['staging_base'],
+                'latest_file': staging_info['latest_json'],
+                'daily_csv': staging_info['daily_csv'],
+                'monthly_summary': staging_info['monthly_summary']
+            },
             'date_range': {
                 'first_record': df['timestamp'].min().isoformat(),
                 'last_record': df['timestamp'].max().isoformat(),
@@ -307,38 +308,38 @@ def generate_s3_summary(s3_client, bucket_info: Dict[str, str]) -> Dict[str, Any
             'data_quality': {
                 'avg_quality_score': round(df['data_quality_score'].mean(), 1),
                 'mock_data_percentage': round((df['data_quality_score'] < 100).mean() * 100, 1)
-            },
-            's3_info': bucket_info
+            }
         }
         
-        print(f"📊 Temperature Summary (from S3):")
+        print(f"📊 Temperature Summary (from staging):")
         print(f"   📈 Records: {summary['total_records']}")
         print(f"   🌡️ Current: {summary['temperature_stats']['current_celsius']}°C")
         print(f"   📊 Average: {summary['temperature_stats']['avg_celsius']}°C")
         print(f"   📉 Range: {summary['temperature_stats']['min_celsius']}°C - {summary['temperature_stats']['max_celsius']}°C")
-        print(f"   ☁️ S3 Bucket: {bucket_name}")
+        print(f"   💾 Staging: {staging_info['staging_base']}")
         
         return summary
         
     except Exception as e:
-        print(f"❌ Error generating S3 summary: {e}")
+        print(f"❌ Error generating staging summary: {e}")
         return {"error": str(e)}
 
 
 @flow(
-    name="Campinas Temperature Monitor (S3)",
-    description="Collects and stores temperature data for Campinas, SP in AWS S3",
+    name="Campinas Temperature Monitor (Staging)",
+    description="Collects and stores temperature data for Campinas, SP in local staging area with S3-like structure",
     log_prints=True
 )
-def campinas_temperature_s3_pipeline():
+def campinas_temperature_staging_pipeline():
     """
-    Main temperature monitoring pipeline with S3 storage:
+    Main temperature monitoring pipeline with local staging:
     1. Fetch current temperature data for Campinas
     2. Validate and clean the data
-    3. Store in AWS S3 bucket (JSON + CSV formats)
-    4. Generate summary statistics from S3 data
+    3. Create staging directory structure (simulating S3)
+    4. Store in multiple formats and locations
+    5. Generate summary statistics from staging data
     """
-    print("🚀 Starting Campinas Temperature Pipeline (S3 Storage)...")
+    print("🚀 Starting Campinas Temperature Pipeline (Local Staging)...")
     
     # Fetch temperature data
     temperature_data = get_campinas_temperature()
@@ -346,23 +347,23 @@ def campinas_temperature_s3_pipeline():
     # Validate data
     validated_data = validate_temperature_data(temperature_data)
     
-    # Initialize S3 client
-    s3_client = get_s3_client()
+    # Create staging directories
+    staging_base = create_staging_directories()
     
-    # Load to S3 bucket
-    bucket_info = load_to_s3_bucket(validated_data, s3_client)
+    # Load to staging area
+    staging_info = load_to_staging(validated_data, staging_base)
     
-    # Generate summary from S3
-    summary = generate_s3_summary(s3_client, bucket_info)
+    # Generate summary from staging
+    summary = generate_staging_summary(staging_info)
     
-    print("🎉 Campinas Temperature Pipeline (S3) completed!")
+    print("🎉 Campinas Temperature Pipeline (Local Staging) completed!")
     
     return {
         'pipeline_status': 'completed',
         'temperature_celsius': validated_data['temperature_celsius'],
         'weather_description': validated_data['weather_description'],
-        'storage_type': 's3',
-        'bucket_info': bucket_info,
+        'storage_type': 'local_staging',
+        'staging_info': staging_info,
         'summary': summary,
         'execution_time': datetime.now().isoformat()
     }
@@ -370,20 +371,11 @@ def campinas_temperature_s3_pipeline():
 
 if __name__ == "__main__":
     # Run the flow locally for testing
-    print("🧪 Running Campinas Temperature Pipeline (S3) locally...")
+    print("🧪 Running Campinas Temperature Pipeline (Local Staging) locally...")
     
-    # Check if AWS credentials are available
-    if not (os.getenv('AWS_ACCESS_KEY_ID') or os.path.exists(os.path.expanduser('~/.aws/credentials'))):
-        print("⚠️ AWS credentials not found. Please configure:")
-        print("   export AWS_ACCESS_KEY_ID=your_access_key")
-        print("   export AWS_SECRET_ACCESS_KEY=your_secret_key")
-        print("   export AWS_REGION=us-east-1")
-        print("   export S3_BUCKET_NAME=your-bucket-name")
-        exit(1)
-    
-    result = campinas_temperature_s3_pipeline()
+    result = campinas_temperature_staging_pipeline()
     print(f"🎯 Pipeline result: {result['pipeline_status']}")
     print(f"🌡️ Current temperature: {result['temperature_celsius']}°C")
     print(f"🌤️ Weather: {result['weather_description']}")
-    print(f"☁️ Stored in S3 bucket: {result['bucket_info']['bucket']}")
+    print(f"💾 Stored in staging: {result['staging_info']['staging_base']}")
 

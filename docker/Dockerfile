@@ -17,21 +17,19 @@ RUN useradd -m -s /bin/bash prefect
 # Set working directory
 WORKDIR /app
 
-# Install Python dependencies including AWS SDK
+# Install Python dependencies (local development only)
 RUN pip install --no-cache-dir \
     prefect==2.14.21 \
     pandas==2.1.4 \
     requests==2.31.0 \
     sqlalchemy==2.0.23 \
-    psycopg2-binary==2.9.9 \
-    boto3==1.34.0 \
-    s3fs==2023.12.2
+    psycopg2-binary==2.9.9
 
 # Fix griffe version conflict (Prefect installs 1.8.0 but needs 0.38.1)
 RUN pip install --no-cache-dir griffe==0.38.1
 
-# Copy flows from parent directory
-COPY ../flows/ /app/flows/
+# Copy flows from parent directory (using correct Docker build context)
+COPY flows/ /app/flows/
 COPY prefect-entrypoint.sh /app/prefect-entrypoint.sh
 
 # Make scripts executable

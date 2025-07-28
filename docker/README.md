@@ -1,122 +1,103 @@
 # Prefect Local Development Environment
 
-This Docker environment provides a complete Prefect setup for local development with automatic pipeline execution and **AWS S3 integration**.
+This Docker environment provides a complete Prefect setup for local development with automatic pipeline execution and **local staging area** that simulates production data lake structure.
 
 ## 🚀 Quick Start
 
 ```bash
-# 1. Configure AWS credentials (optional, for S3 integration)
-cp .env.example .env
-# Edit .env with your AWS credentials
-
-# 2. Start Prefect with automatic temperature monitoring
+# Start Prefect with automatic temperature monitoring
 ./test-prefect.sh
 
-# 3. Access Prefect UI
+# Access Prefect UI
 open http://localhost:4200
 ```
 
-## ☁️ AWS S3 Integration
+## 💾 Local Staging Area
 
-The environment supports both **local storage** and **AWS S3** for data persistence:
+The environment uses a **local staging area** that simulates a production data lake structure:
 
-### Local Storage (Default)
-- Data stored in Docker volumes
-- No AWS credentials required
-- Perfect for development and testing
-
-### S3 Storage (Optional)
-- Data stored in AWS S3 bucket
-- Requires AWS credentials in `.env` file
-- Production-ready data lake storage
-
-### Configuration
-
-Create a `.env` file from the example:
-
-```bash
-cp .env.example .env
+### Staging Structure
 ```
-
-Edit `.env` with your AWS credentials:
-
-```bash
-# AWS Configuration
-AWS_ACCESS_KEY_ID=your_access_key_here
-AWS_SECRET_ACCESS_KEY=your_secret_key_here
-AWS_REGION=us-east-1
-S3_BUCKET_NAME=your-bucket-name
-```
-
-## 🌡️ Temperature Pipelines
-
-Two temperature monitoring pipelines are available:
-
-### 1. Local Storage Pipeline
-- **File:** `flows/weather/campinas_temperature.py`
-- **Storage:** Local CSV and JSON files
-- **Usage:** Default pipeline, runs automatically
-
-### 2. S3 Storage Pipeline  
-- **File:** `flows/weather/campinas_temperature_s3.py`
-- **Storage:** AWS S3 bucket (multiple formats)
-- **Usage:** Requires AWS credentials
-
-### S3 Storage Structure
-
-When using S3, data is organized as:
-
-```
-s3://your-bucket/
+/app/data/staging/
 ├── weather/campinas/
 │   ├── latest/
 │   │   └── temperature.json          # Latest reading
 │   ├── hourly/
 │   │   └── 2025/01/28/
 │   │       └── temperature_14.json   # Hourly readings
-│   └── daily/
-│       └── 2025/01/28/
-│           └── temperature_history.csv # Daily aggregation
+│   ├── daily/
+│   │   └── 2025/01/28/
+│   │       └── temperature_history.csv # Daily aggregation
+│   ├── monthly/
+│   │   └── 2025/01/
+│   │       └── summary.json          # Monthly statistics
+│   └── raw/
+│       └── 20250128_143022.json      # Raw timestamped data
 ```
+
+### Benefits of Staging Approach
+- **S3-like structure** for production readiness
+- **Multiple data formats** (JSON, CSV) for different use cases
+- **Time-based partitioning** for efficient data organization
+- **Local development** without cloud dependencies
+- **Easy migration** to real S3 when ready
+
+## 🌡️ Temperature Pipeline
+
+The automatic temperature monitoring pipeline:
+
+### Features
+- **Real weather data** from Campinas, SP, Brazil
+- **Data validation** and quality scoring
+- **Multiple storage formats** (latest, hourly, daily, monthly, raw)
+- **S3-like organization** for production readiness
+- **Error handling** with fallback mock data
+- **Summary statistics** and monitoring
+
+### Pipeline Flow
+1. **Fetch** current temperature from wttr.in API
+2. **Validate** and clean the data
+3. **Create** staging directory structure
+4. **Store** in multiple formats and locations
+5. **Generate** summary statistics
 
 ## 📊 Data Access
 
-### Local Data
 ```bash
 # View latest temperature reading
-docker compose exec prefect-server cat /app/data/campinas_temperature_latest.json
+docker compose exec prefect-server cat /app/data/staging/weather/campinas/latest/temperature.json
 
-# View temperature history
-docker compose exec prefect-server head /app/data/campinas_temperature_history.csv
-```
+# View daily temperature history
+docker compose exec prefect-server head /app/data/staging/weather/campinas/daily/*/temperature_history.csv
 
-### S3 Data
-```bash
-# Using AWS CLI (if configured)
-aws s3 cp s3://your-bucket/weather/campinas/latest/temperature.json -
+# View staging structure
+docker compose exec prefect-server find /app/data/staging -type f
 
-# Or check in AWS Console
-# Navigate to your S3 bucket → weather/campinas/latest/
+# View monthly summary
+docker compose exec prefect-server cat /app/data/staging/weather/campinas/monthly/*/summary.json
+
+# View container logs
+docker compose logs -f
 ```
 
 ## 🔧 Development Workflow
 
 ### Single Flows Directory
 
-- **No more confusion**: Only one `flows/` directory in the root
-- **Shared between local and cloud**: Same flows run everywhere  
-- **Organized structure**: Flows categorized by purpose
+- **No confusion**: Only one `flows/` directory in the root
+- **Shared structure**: Same flows can be deployed to cloud later
+- **Organized by purpose**: Flows categorized logically
 
 ```
 flows/
-├── weather/                    # Weather-related pipelines
-│   ├── campinas_temperature.py # Local storage pipeline
-│   ├── campinas_temperature_s3.py # S3 storage pipeline
-│   └── deploy_temperature_flow.py # Auto-deployment script
-├── examples/                   # Tutorial flows
-├── etl/                       # Production ETL pipelines
-├── ml/                        # Machine Learning workflows
-└── monitoring/                # Data quality monitoring
+├── weather/                           # Weather-related pipelines
+│   ├── campinas_temperature.py       # Simple local storage
+│   ├── campinas_temperature_staging.py # S3-like staging structure
+│   └── deploy_temperature_flow.py    # Auto-deployment script
+├── examples/                          # Tutorial flows
+├── etl/                              # Production ETL pipelines
+├── ml/                               # Machine Learning workflows
+└── monitoring/                       # Data quality monitoring
 ```
 
 ### Making Changes
@@ -166,7 +147,7 @@ The temperature pipeline provides:
 - **Data quality scores** and validation
 - **Automatic error recovery** with mock data
 - **Summary reports** with key metrics
-- **S3 integration** for production data lake
+- **Staging area** with production-like structure
 
 ## 🔄 Automatic Features
 
@@ -176,14 +157,15 @@ When Docker starts:
 2. ✅ **Worker pool** created and started  
 3. ✅ **Temperature pipeline** runs immediately
 4. ✅ **Scheduled execution** every 30 minutes
-5. ✅ **Data persistence** (local or S3)
-6. ✅ **Health checks** and monitoring
+5. ✅ **Staging area** created with S3-like structure
+6. ✅ **Data persistence** across container restarts
+7. ✅ **Health checks** and monitoring
 
 ## 🎯 Next Steps
 
 1. **View the UI** at http://localhost:4200
-2. **Check temperature data** locally or in S3
-3. **Configure AWS** for S3 integration (optional)
+2. **Check temperature data** in staging area
+3. **Explore staging structure** with find commands
 4. **Create new flows** in `flows/` directory
 5. **Deploy to cloud** when ready (currently disabled)
 
@@ -196,5 +178,14 @@ To re-enable AWS deployment:
 2. Configure GitHub secrets for AWS credentials
 3. Push changes to trigger deployment
 
-The environment is designed to be **zero-configuration** for local development - just run `./test-prefect.sh` and start building!
+## 💡 Production Migration
+
+When ready for production, the staging structure makes it easy to:
+
+1. **Replace local paths** with S3 URLs
+2. **Add AWS credentials** and boto3 integration  
+3. **Keep same directory structure** in S3
+4. **Minimal code changes** required
+
+The environment is designed to be **zero-configuration** for local development while maintaining **production readiness**!
 
