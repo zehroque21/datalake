@@ -1,101 +1,98 @@
-name: 'Terraform AWS Infrastructure'
+# DISABLED: AWS deployment temporarily disabled for local development
+# Uncomment the lines below to re-enable automatic AWS deployment
 
-on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'terraform/**'
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'terraform/**'
+# name: 'Terraform AWS Infrastructure'
 
-    # Removed invalid YAML and misplaced code block here
+# on:
+#   push:
+#     branches:
+#       - main
+#     paths:
+#       - 'terraform/**'
+#   pull_request:
+#     branches:
+#       - main
+#     paths:
+#       - 'terraform/**'
 
-env:
-  AWS_REGION: us-east-1
+# env:
+#   AWS_REGION: us-east-1
 
-jobs:
-  terraform:
-    name: 'Terraform'
-    runs-on: ubuntu-latest
+# jobs:
+#   terraform:
+#     name: 'Terraform'
+#     runs-on: ubuntu-latest
 
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v3
+#     steps:
+#     - name: Checkout
+#       uses: actions/checkout@v3
 
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
-      with:
-        terraform_version: 1.5.0 # Use a versão mais recente ou compatível
+#     - name: Setup Terraform
+#       uses: hashicorp/setup-terraform@v2
+#       with:
+#         terraform_version: 1.5.0
 
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
+#     - name: Configure AWS Credentials
+#       uses: aws-actions/configure-aws-credentials@v1
+#       with:
+#         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#         aws-region: ${{ env.AWS_REGION }}
 
-    - name: Terraform Init
-      id: init
-      run: terraform init
-      working-directory: ./terraform
+#     - name: Terraform Init
+#       id: init
+#       run: terraform init
+#       working-directory: ./terraform
 
-    - name: Terraform Format
-      id: fmt
-      run: terraform fmt -check
-      working-directory: ./terraform
+#     - name: Terraform Format
+#       id: fmt
+#       run: terraform fmt -check
+#       working-directory: ./terraform
 
-    - name: Terraform Validate
-      id: validate
-      run: terraform validate
-      working-directory: ./terraform
+#     - name: Terraform Validate
+#       id: validate
+#       run: terraform validate
+#       working-directory: ./terraform
 
-    - name: Terraform Plan
-      id: plan
-      run: terraform plan -no-color
-      working-directory: ./terraform
-      continue-on-error: true
+#     - name: Terraform Plan
+#       id: plan
+#       run: terraform plan -no-color
+#       working-directory: ./terraform
+#       continue-on-error: true
 
-    - name: Update Pull Request
-      uses: actions/github-script@v6
-      if: github.event_name == 'pull_request'
-      with:
-        script: |
-          const output = `#### Terraform Plan\n\n\u0060\u0060\u0060terraform\n${process.env.TF_PLAN_OUTPUT}\n\u0060\u0060\u0060`;
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: output
-          });
-      env:
-        TF_PLAN_OUTPUT: ${{ steps.plan.outputs.stdout }}
+#     - name: Update Pull Request
+#       uses: actions/github-script@v6
+#       if: github.event_name == 'pull_request'
+#       with:
+#         script: |
+#           const output = `#### Terraform Plan\n\n\u0060\u0060\u0060terraform\n${process.env.TF_PLAN_OUTPUT}\n\u0060\u0060\u0060`;
+#           github.rest.issues.createComment({
+#             issue_number: context.issue.number,
+#             owner: context.repo.owner,
+#             repo: context.repo.repo,
+#             body: output
+#           });
+#       env:
+#         TF_PLAN_OUTPUT: ${{ steps.plan.outputs.stdout }}
 
-
-
-
-
-    - name: Terminate old EC2 instances
-      run: |
-        INSTANCE_IDS=$(aws ec2 describe-instances \
-          --filters "Name=tag:Name,Values=Airflow VM" \
-          --query "Reservations[*].Instances[*].InstanceId" \
-          --output text)
+#     - name: Terminate old EC2 instances
+#       run: |
+#         INSTANCE_IDS=$(aws ec2 describe-instances \
+#           --filters "Name=tag:Name,Values=Prefect VM" \
+#           --query "Reservations[*].Instances[*].InstanceId" \
+#           --output text)
         
-        if [ -n "$INSTANCE_IDS" ]; then
-          echo "Terminating old EC2 instances: $INSTANCE_IDS"
-          aws ec2 terminate-instances --instance-ids $INSTANCE_IDS
-          aws ec2 wait instance-terminated --instance-ids $INSTANCE_IDS
-        else
-          echo "No old EC2 instances found to terminate."
-        fi
+#         if [ -n "$INSTANCE_IDS" ]; then
+#           echo "Terminating old EC2 instances: $INSTANCE_IDS"
+#           aws ec2 terminate-instances --instance-ids $INSTANCE_IDS
+#           aws ec2 wait instance-terminated --instance-ids $INSTANCE_IDS
+#         else
+#           echo "No old EC2 instances found to terminate."
+#         fi
 
-    - name: Terraform Apply
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      run: terraform apply -auto-approve
-      working-directory: ./terraform
+#     - name: Terraform Apply
+#       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+#       run: terraform apply -auto-approve
+#       working-directory: ./terraform
 
 

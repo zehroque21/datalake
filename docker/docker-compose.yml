@@ -10,9 +10,16 @@ services:
       - PREFECT_API_URL=http://localhost:4200/api
       - PREFECT_SERVER_API_HOST=0.0.0.0
       - PREFECT_SERVER_API_PORT=4200
+      # AWS credentials (loaded from .env file if present)
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME:-datalake-amadoroque-bucket}
     volumes:
       - prefect_data:/app/data
       - ./logs:/app/logs
+    env_file:
+      - .env
     entrypoint: ["/app/prefect-entrypoint.sh"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:4200/api/health"]
