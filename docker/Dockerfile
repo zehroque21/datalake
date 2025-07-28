@@ -20,6 +20,7 @@ WORKDIR /app
 # Install Prefect and common data tools
 RUN pip install --no-cache-dir \
     prefect==2.14.21 \
+    griffe==0.38.1 \
     pandas==2.1.4 \
     boto3==1.34.0 \
     requests==2.31.0 \
