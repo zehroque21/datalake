@@ -1,4 +1,4 @@
-# DataLake AWS - Data Engineering Platform
+# DataLake AWS - Modern Data Engineering Platform
 
 🌐 **[Visit the project page](https://zehroque21.github.io/datalake/)** for a complete overview of the solution.
 
@@ -6,18 +6,29 @@
 
 ---
 
-This repository contains a **secure** and complete datalake solution that combines data engineering best practices with infrastructure as code (IaC). The platform provides a robust and hardened environment for data processing and analysis at scale, using Apache Airflow for orchestration and Delta Lake for reliable storage.
+This repository contains a **secure** and complete datalake solution that combines modern data engineering best practices with infrastructure as code (IaC). The platform provides a robust and hardened environment for data processing and analysis at scale, using **Prefect** for orchestration and Delta Lake for reliable storage.
 
 ## 🚀 Overview
 
 The solution automatically provisions a modern, **security-hardened** datalake infrastructure on Amazon Web Services (AWS), integrating:
 
-- **Apache Airflow** for data pipeline orchestration
-- **Delta Lake** for transactional and versioned storage
-- **AWS S3** for scalable and durable storage
-- **EC2** optimized and hardened for data processing
-- **CI/CD** integrated via GitHub Actions
-- **Security-first** approach with no SSH access
+- **🌊 Prefect** for modern data pipeline orchestration
+- **📊 Delta Lake** for transactional and versioned storage
+- **☁️ AWS S3** for scalable and durable storage
+- **🖥️ EC2** optimized and hardened for data processing
+- **🔄 CI/CD** integrated via GitHub Actions
+- **🔒 Security-first** approach with no SSH access
+
+## 🌊 Why Prefect?
+
+We chose **Prefect** over traditional orchestrators for its modern approach:
+
+- ✅ **Python-first** - Native Python workflows, no complex DAG syntax
+- ✅ **Modern UI** - Beautiful, intuitive web interface with real-time monitoring
+- ✅ **Simple deployment** - No dependency hell, works out of the box
+- ✅ **Better debugging** - Clear error messages and easy troubleshooting
+- ✅ **Flexible execution** - Local development, cloud deployment, hybrid workflows
+- ✅ **Type safety** - Built-in data validation and type checking
 
 ## 🔒 Security Features
 
@@ -30,8 +41,8 @@ The solution automatically provisions a modern, **security-hardened** datalake i
 - ✅ **Firewall Protection** - UFW enabled with secure defaults
 
 ### Application Security
-- ✅ **Localhost Binding** - Airflow UI only accessible locally
-- ✅ **Authentication Required** - Password-protected access
+- ✅ **Localhost Binding** - Prefect UI only accessible locally
+- ✅ **Authentication Ready** - Configurable access controls
 - ✅ **Secure Configuration** - Hardened settings
 - ✅ **Service Isolation** - Dedicated user accounts
 - ✅ **Automatic Updates** - Security patches applied automatically
@@ -40,31 +51,31 @@ The solution automatically provisions a modern, **security-hardened** datalake i
 
 Terraform provisions the following **secure** resources on AWS:
 
-### 1. EC2 Instance (`aws_instance.airflow_vm`)
+### 1. EC2 Instance (`aws_instance.prefect_vm`)
 - **Type:** `t3.micro` (optimized for data workloads)
 - **AMI:** Ubuntu Server 22.04 LTS (dynamically selected)
 - **Security:** No SSH keys, encrypted storage, restrictive security group
 - **Access:** AWS Systems Manager Session Manager only
-- **Purpose:** Host for Apache Airflow, Python scripts, Spark, and other processing tools
+- **Purpose:** Host for Prefect server, Python scripts, and data processing tools
 
-### 2. Security Group (`aws_security_group.airflow_sg`)
-- **Ingress:** No inbound rules (except optional Airflow UI from specific IP)
+### 2. Security Group (`aws_security_group.prefect_sg`)
+- **Ingress:** Port 4200 for Prefect UI (configurable)
 - **Egress:** HTTP/HTTPS for package installation, DNS resolution
 - **Purpose:** Network-level security for EC2 instance
 
 ### 3. IAM Role and Policies
-- **Role:** `airflow-ec2-role` with least privilege access
+- **Role:** `prefect-ec2-role` with least privilege access
 - **S3 Policy:** Access only to specific datalake bucket
 - **SSM Policy:** Systems Manager access for secure connections
 - **Purpose:** Secure credential management
 
 ### 4. S3 Bucket (`data.aws_s3_bucket.datalake`)
-- **Name:** `datalake-bucket-for-airflow-and-delta-v2`
+- **Name:** `datalake-bucket-for-prefect-and-delta-v2`
 - **Access:** Restricted to EC2 instance IAM role only
 - **Purpose:** Primary datalake storage for raw data, processed data, and Delta Lake tables
 
 ### 5. CloudWatch Log Group
-- **Name:** `/aws/ec2/airflow`
+- **Name:** `/aws/ec2/prefect`
 - **Retention:** 30 days
 - **Purpose:** Centralized logging and monitoring
 
@@ -96,11 +107,18 @@ Configure the following GitHub Secrets with **least privilege** AWS credentials:
 │   ├── main.tf               # Main resources with security configurations
 │   ├── variables.tf          # Terraform variables
 │   └── outputs.tf            # Secure resource outputs
-├── scripts/                  # Secure configuration scripts and examples
-│   ├── install_airflow.sh    # Hardened Apache Airflow installation
+├── flows/                    # 🌊 Prefect flows (shared dev/prod)
+│   ├── examples/             # Example data pipelines
+│   ├── etl/                  # ETL workflows
+│   ├── ml/                   # Machine learning pipelines
+│   └── monitoring/           # Data quality and monitoring flows
+├── scripts/                  # Secure configuration scripts
+│   ├── install_prefect.sh    # Hardened Prefect installation
 │   └── delta_lake_examples/  # Delta Lake usage examples
-│       ├── write_delta_table.py
-│       └── read_delta_table.py
+├── docker/                   # 🐳 Local development environment
+│   ├── Dockerfile            # Prefect development container
+│   ├── docker-compose.yml    # Local Prefect stack
+│   └── flows/               # → Symlink to ../flows/
 ├── .github/workflows/        # CI/CD pipelines
 │   └── terraform.yaml        # Main workflow with security checks
 ├── SECURITY.md              # Comprehensive security documentation
@@ -108,62 +126,114 @@ Configure the following GitHub Secrets with **least privilege** AWS credentials:
 └── .gitignore              # Comprehensive ignore file for security
 ```
 
-## 🛠️ Setup and Usage
+## 🛠️ Development Workflow
 
-### 1. Infrastructure Deployment
+### 🏠 Local Development (Recommended)
+
+1. **Start local Prefect environment:**
 ```bash
-# Deployment is automatic via GitHub Actions
-# Push changes to /terraform/ to trigger
-git add terraform/
-git commit -m "Update infrastructure"
+cd docker/
+./test-prefect.sh
+```
+
+2. **Access local Prefect UI:**
+```
+http://localhost:4200
+```
+
+3. **Develop flows in `flows/` directory:**
+```python
+# flows/examples/my_pipeline.py
+from prefect import flow, task
+
+@task
+def extract_data():
+    return {"data": "example"}
+
+@flow
+def my_pipeline():
+    data = extract_data()
+    return data
+```
+
+4. **Test flows locally:**
+```bash
+cd flows/examples/
+python my_pipeline.py
+```
+
+### ☁️ Cloud Deployment
+
+1. **Deploy infrastructure:**
+```bash
+# Automatic via GitHub Actions when pushing to main
+git add flows/ terraform/
+git commit -m "Add new pipeline"
 git push origin main
 ```
 
-### 2. Secure Instance Access
+2. **Access cloud Prefect:**
+```bash
+# Port forward from EC2 instance
+aws ssm start-session \
+    --target <INSTANCE_ID> \
+    --document-name AWS-StartPortForwardingSession \
+    --parameters '{"portNumber":["4200"],"localPortNumber":["4200"]}'
+```
+
+3. **Deploy flows to cloud:**
+```bash
+# Connect to instance
+aws ssm start-session --target <INSTANCE_ID>
+
+# Deploy flows
+cd /home/prefect
+source prefect-env/bin/activate
+python flows/examples/my_pipeline.py
+```
+
+## 🚀 Quick Start
+
+### 1. Infrastructure Deployment
+```bash
+# Clone repository
+git clone https://github.com/zehroque21/datalake.git
+cd datalake
+
+# Deploy infrastructure (automatic via GitHub Actions)
+git push origin main
+```
+
+### 2. Local Development Setup
+```bash
+# Start local Prefect environment
+cd docker/
+./test-prefect.sh
+
+# Access UI at http://localhost:4200
+```
+
+### 3. Secure Cloud Access
 
 **⚠️ IMPORTANT: No SSH access is available for security reasons.**
 
 Use AWS Systems Manager Session Manager for secure access:
 
-#### Method 1: AWS CLI (Recommended)
 ```bash
 # Install and configure AWS CLI
 aws configure
 
 # Start secure session
 aws ssm start-session --target <INSTANCE_ID>
-```
 
-#### Method 2: AWS Console
-1. Go to EC2 → Instances
-2. Select your instance
-3. Click "Connect" → "Session Manager"
-4. Click "Connect"
-
-### 3. Airflow Installation
-```bash
-# Once connected via Session Manager, run:
-cd /home/ubuntu
-git clone https://github.com/zehroque21/datalake.git
-cd datalake
-bash scripts/install_airflow.sh
-```
-
-### 4. Accessing Airflow Web UI
-
-The Airflow UI is only accessible locally for security. Use port forwarding:
-
-```bash
-# Forward port 8080 from instance to local machine
+# Port forward Prefect UI
 aws ssm start-session \
     --target <INSTANCE_ID> \
     --document-name AWS-StartPortForwardingSession \
-    --parameters '{"portNumber":["8080"],"localPortNumber":["8080"]}'
+    --parameters '{"portNumber":["4200"],"localPortNumber":["4200"]}'
 ```
 
-Then access `http://localhost:8080` in your browser.
-
-### 5. Delta Lake Usage
+### 4. Delta Lake Usage
 ```python
 # Write example
 python scripts/delta_lake_examples/write_delta_table.py
@@ -175,33 +245,86 @@ python scripts/delta_lake_examples/read_delta_table.py
 ## 🔧 Technologies Used
 
 - **Infrastructure:** Terraform, AWS (EC2, S3, IAM, Systems Manager)
-- **Orchestration:** Apache Airflow (security-hardened)
+- **Orchestration:** 🌊 Prefect (modern Python-first workflow engine)
 - **Storage:** Delta Lake, AWS S3 (encrypted)
 - **Processing:** Python, Apache Spark
+- **Development:** Docker, Docker Compose
 - **CI/CD:** GitHub Actions (with security validations)
-- **Monitoring:** AWS CloudWatch
+- **Monitoring:** AWS CloudWatch, Prefect UI
 - **Security:** AWS Systems Manager, IAM, Security Groups, EBS Encryption
 
 ## 📊 Solution Architecture
 
 ```
-GitHub Actions → Terraform → AWS EC2 (Hardened) → AWS S3 (Encrypted Delta Lake)
+GitHub Actions → Terraform → AWS EC2 (Prefect) → AWS S3 (Encrypted Delta Lake)
                      ↓
             AWS Systems Manager (Secure Access)
+                     ↓
+            Local Development (Docker + Prefect)
 ```
 
-1. **Secure Ingestion:** Data collection via hardened Airflow pipelines
-2. **Protected Processing:** Transformations with Python/Spark in isolated environment
-3. **Encrypted Storage:** Data saved in Delta Lake format with encryption
-4. **Monitored Analysis:** Queries and analytics with comprehensive logging
+1. **🏠 Local Development:** Develop and test flows using Docker + Prefect
+2. **☁️ Cloud Deployment:** Deploy flows to production Prefect instance
+3. **🔒 Secure Processing:** Execute workflows in hardened AWS environment
+4. **📊 Encrypted Storage:** Store results in Delta Lake with encryption
+5. **📈 Monitoring:** Track execution via Prefect UI and CloudWatch
 
 ## 🎯 Use Cases
 
-- **Secure ETL/ELT Pipelines:** Automated data processing with security controls
-- **Compliant Data Warehousing:** Structured storage meeting security requirements
-- **Protected Real-time Analytics:** Stream data processing with encryption
-- **Secure Machine Learning:** Data preparation for ML models with access controls
-- **Auditable Business Intelligence:** Dashboards and reports with full logging
+- **🔄 Modern ETL/ELT Pipelines:** Python-first data processing workflows
+- **🏢 Secure Data Warehousing:** Structured storage meeting compliance requirements
+- **⚡ Real-time Analytics:** Stream data processing with modern orchestration
+- **🤖 Machine Learning Pipelines:** End-to-end ML workflows with data lineage
+- **📊 Business Intelligence:** Automated reporting and dashboard updates
+- **🔍 Data Quality Monitoring:** Automated data validation and alerting
+
+## 🌊 Prefect Flow Examples
+
+### Basic ETL Pipeline
+```python
+from prefect import flow, task
+import pandas as pd
+
+@task
+def extract_data(source: str):
+    # Extract data from source
+    return pd.read_csv(source)
+
+@task
+def transform_data(df: pd.DataFrame):
+    # Transform data
+    return df.dropna()
+
+@task
+def load_data(df: pd.DataFrame, destination: str):
+    # Load to destination
+    df.to_parquet(destination)
+
+@flow
+def etl_pipeline(source: str, destination: str):
+    raw_data = extract_data(source)
+    clean_data = transform_data(raw_data)
+    load_data(clean_data, destination)
+```
+
+### Scheduled Data Pipeline
+```python
+from prefect import flow
+from prefect.deployments import Deployment
+from prefect.server.schemas.schedules import CronSchedule
+
+@flow
+def daily_report():
+    # Your daily data processing logic
+    pass
+
+# Schedule to run daily at 6 AM
+deployment = Deployment.build_from_flow(
+    flow=daily_report,
+    name="daily-report",
+    schedule=CronSchedule(cron="0 6 * * *")
+)
+```
 
 ## 🔒 Security Compliance
 
@@ -213,7 +336,7 @@ This infrastructure follows:
 
 ## 👨‍💻 About the Creator
 
-**Amado Roque** - Data Engineer specialized in secure big data and analytics solutions.
+**Amado Roque** - Data Engineer specialized in modern data orchestration and secure analytics solutions.
 
 - 🔗 [LinkedIn](https://www.linkedin.com/in/amado-roque/)
 - 🐙 [GitHub](https://github.com/zehroque21)

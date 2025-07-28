@@ -81,112 +81,10 @@ log '🗄️ Initializing Prefect database...'
 prefect server database reset -y
 "
 
-# Create example flows directory
-log "📁 Creating flows directory..."
+# Create flows directory and copy from repository
+log "📁 Setting up flows directory..."
 sudo -u prefect mkdir -p /home/prefect/flows
-
-# Create example flow
-log "📝 Creating example data pipeline flow..."
-sudo -u prefect tee /home/prefect/flows/example_pipeline.py > /dev/null << 'EOF'
-"""
-Example Data Pipeline with Prefect for EC2
-"""
-
-import pandas as pd
-import requests
-from datetime import datetime, timedelta
-from prefect import flow, task
-import json
-
-
-@task
-def extract_sample_data():
-    """Extract sample data from a public API"""
-    print("🔍 Extracting sample data...")
-    
-    try:
-        response = requests.get("https://jsonplaceholder.typicode.com/posts")
-        data = response.json()
-        print(f"✅ Extracted {len(data)} records")
-        return data
-    except Exception as e:
-        print(f"❌ Error extracting data: {e}")
-        return []
-
-
-@task
-def transform_data(raw_data):
-    """Transform the raw data"""
-    print("🔄 Transforming data...")
-    
-    if not raw_data:
-        return pd.DataFrame()
-    
-    # Convert to DataFrame
-    df = pd.DataFrame(raw_data)
-    
-    # Add transformations
-    df['title_length'] = df['title'].str.len()
-    df['body_length'] = df['body'].str.len()
-    df['created_at'] = datetime.now()
-    df['word_count'] = df['body'].str.split().str.len()
-    
-    # Filter and clean
-    df_clean = df[df['title_length'] > 10].copy()
-    
-    print(f"✅ Transformed data: {len(df_clean)} records after cleaning")
-    return df_clean
-
-
-@task
-def load_data(transformed_data):
-    """Load data to local storage"""
-    print("💾 Loading data...")
-    
-    if transformed_data.empty:
-        print("⚠️ No data to load")
-        return {"status": "no_data"}
-    
-    # Save to local files
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    
-    # Save as JSON
-    json_path = f"/home/prefect/data/processed_data_{timestamp}.json"
-    transformed_data.to_json(json_path, orient='records', indent=2)
-    
-    print(f"✅ Data saved to: {json_path}")
-    
-    return {
-        "status": "success",
-        "file_path": json_path,
-        "record_count": len(transformed_data)
-    }
-
-
-@flow(name="EC2 Data Pipeline", description="Example ETL pipeline for EC2")
-def ec2_data_pipeline():
-    """Main ETL flow for EC2"""
-    print("🚀 Starting EC2 Data Pipeline...")
-    
-    # Extract
-    raw_data = extract_sample_data()
-    
-    # Transform
-    clean_data = transform_data(raw_data)
-    
-    # Load
-    result = load_data(clean_data)
-    
-    print("🎉 Pipeline completed successfully!")
-    return result
-
-
-if __name__ == "__main__":
-    # Run the flow locally for testing
-    print("🧪 Running flow locally for testing...")
-    result = ec2_data_pipeline()
-    print(f"🎯 Final result: {result}")
-EOF
+sudo -u prefect cp -r /home/ubuntu/datalake/flows/* /home/prefect/flows/ 2>/dev/null || log "⚠️ No flows directory found in repository"
 
 # Create data directory
 sudo -u prefect mkdir -p /home/prefect/data
@@ -303,8 +201,10 @@ log "   sudo systemctl status prefect-worker"
 log "   sudo journalctl -u prefect-server -f"
 log "   sudo journalctl -u prefect-worker -f"
 log ""
-log "🧪 Test Flow:"
-log "   sudo -u prefect bash -c 'cd /home/prefect && source prefect-env/bin/activate && python flows/example_pipeline.py'"
+log "🧪 Test Flows:"
+log "   sudo -u prefect bash -c 'cd /home/prefect && source prefect-env/bin/activate && python flows/examples/basic_etl_pipeline.py'"
+log "   sudo -u prefect bash -c 'cd /home/prefect && source prefect-env/bin/activate && python flows/etl/s3_data_pipeline.py'"
+log "   sudo -u prefect bash -c 'cd /home/prefect && source prefect-env/bin/activate && python flows/monitoring/data_quality_monitor.py'"
 log ""
 log "🎯 Next Steps:"
 log "   1. Access the Prefect UI via port forwarding or public IP"

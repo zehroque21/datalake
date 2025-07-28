@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DataLake AWS - Data Engineering Platform</title>
+    <title>DataLake AWS - Modern Data Engineering Platform</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -67,9 +67,14 @@
             color: #667eea;
         }
 
+        main {
+            margin-top: 80px;
+            padding: 2rem 0;
+        }
+
         .hero {
-            padding: 120px 0 80px;
             text-align: center;
+            padding: 4rem 0;
             color: white;
         }
 
@@ -77,73 +82,62 @@
             font-size: 3.5rem;
             font-weight: 700;
             margin-bottom: 1rem;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(45deg, #fff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .hero p {
-            font-size: 1.2rem;
+            font-size: 1.25rem;
             margin-bottom: 2rem;
             opacity: 0.9;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
         }
 
         .cta-button {
             display: inline-block;
-            background: #ff6b6b;
+            background: linear-gradient(45deg, #667eea, #764ba2);
             color: white;
-            padding: 15px 30px;
+            padding: 1rem 2rem;
             text-decoration: none;
             border-radius: 50px;
             font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
 
         .cta-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
-        }
-
-        .main-content {
-            background: white;
-            margin-top: -50px;
-            border-radius: 20px 20px 0 0;
-            position: relative;
-            z-index: 10;
-        }
-
-        .section {
-            padding: 80px 0;
-        }
-
-        .section h2 {
-            font-size: 2.5rem;
-            font-weight: 600;
-            text-align: center;
-            margin-bottom: 3rem;
-            color: #333;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
         }
 
         .features {
+            background: white;
+            padding: 4rem 0;
+            margin: 2rem 0;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 2rem;
-            margin-bottom: 4rem;
+            margin-top: 3rem;
         }
 
         .feature-card {
-            background: #f8f9fa;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
             padding: 2rem;
             border-radius: 15px;
             text-align: center;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #e2e8f0;
         }
 
         .feature-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
         }
 
         .feature-icon {
@@ -153,25 +147,31 @@
         }
 
         .feature-card h3 {
-            font-size: 1.3rem;
+            font-size: 1.5rem;
             font-weight: 600;
             margin-bottom: 1rem;
-            color: #333;
+            color: #1e293b;
+        }
+
+        .feature-card p {
+            color: #64748b;
+            line-height: 1.6;
         }
 
         .architecture {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 3rem;
-            margin: 3rem 0;
+            background: white;
+            padding: 4rem 0;
+            margin: 2rem 0;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
         }
 
-        .architecture h3 {
-            font-size: 2rem;
-            font-weight: 600;
+        .architecture h2 {
             text-align: center;
-            margin-bottom: 2rem;
-            color: #333;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 3rem;
+            color: #1e293b;
         }
 
         .flow-diagram {
@@ -180,16 +180,22 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 2rem;
-            margin: 2rem 0;
+            margin: 3rem 0;
         }
 
-        .flow-item {
-            background: white;
+        .flow-step {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
             padding: 1.5rem;
-            border-radius: 10px;
+            border-radius: 15px;
             text-align: center;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            min-width: 150px;
+            min-width: 200px;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .flow-step:hover {
+            transform: scale(1.05);
         }
 
         .flow-arrow {
@@ -197,138 +203,142 @@
             color: #667eea;
         }
 
-        .creator-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .prefect-highlight {
+            background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
             color: white;
-            border-radius: 15px;
-            padding: 3rem;
-            margin: 3rem 0;
-        }
-
-        .creator-content {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 3rem;
-            align-items: center;
-        }
-
-        .creator-info h3 {
-            font-size: 2rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-        }
-
-        .creator-info p {
-            margin-bottom: 1rem;
-            opacity: 0.9;
-        }
-
-        .skills {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        .skill-tag {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 0.5rem 1rem;
+            padding: 3rem 0;
+            margin: 2rem 0;
             border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 500;
+            text-align: center;
         }
 
-        .social-links {
+        .prefect-highlight h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .prefect-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
             margin-top: 2rem;
         }
 
-        .social-links a {
-            color: white;
-            font-size: 1.5rem;
-            margin-right: 1rem;
-            transition: opacity 0.3s ease;
+        .prefect-feature {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
         }
 
-        .social-links a:hover {
-            opacity: 0.7;
+        .about {
+            background: white;
+            padding: 4rem 0;
+            margin: 2rem 0;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .about h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            color: #1e293b;
+        }
+
+        .creator-info {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 2rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .creator-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .social-link {
+            display: inline-block;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.75rem;
+            border-radius: 50%;
+            text-decoration: none;
+            transition: transform 0.3s ease;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .social-link:hover {
+            transform: scale(1.1);
         }
 
         footer {
-            background: #333;
-            color: white;
-            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             padding: 2rem 0;
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .tech-stack {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+
+        .tech-badge {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 500;
         }
 
         @media (max-width: 768px) {
             .hero h1 {
                 font-size: 2.5rem;
             }
-
+            
             .nav-links {
                 display: none;
             }
-
-            .creator-content {
-                grid-template-columns: 1fr;
-                text-align: center;
-            }
-
+            
             .flow-diagram {
                 flex-direction: column;
             }
-
+            
             .flow-arrow {
                 transform: rotate(90deg);
             }
-
-            .section {
-                padding: 60px 0;
-            }
-
-            .section h2 {
-                font-size: 2rem;
-            }
-
-            .features {
-                grid-template-columns: 1fr;
-                gap: 1.5rem;
-            }
-
-            .architecture {
-                padding: 2rem;
-            }
-
-            .creator-section {
-                padding: 2rem;
-            }
         }
 
-        @media (max-width: 480px) {
-            .container {
-                padding: 0 15px;
-            }
+        .highlight {
+            background: linear-gradient(45deg, #fbbf24, #f59e0b);
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 5px;
+            font-weight: 600;
+        }
 
-            .hero h1 {
-                font-size: 2rem;
-            }
-
-            .hero p {
-                font-size: 1rem;
-            }
-
-            .cta-button {
-                padding: 12px 24px;
-                font-size: 0.9rem;
-            }
-
-            .feature-card {
-                padding: 1.5rem;
-            }
-
-            .feature-icon {
-                font-size: 2.5rem;
-            }
+        .new-badge {
+            background: #10b981;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
         }
     </style>
 </head>
@@ -339,181 +349,255 @@
                 <i class="fas fa-database"></i> DataLake AWS
             </div>
             <ul class="nav-links">
-                <li><a href="#overview">Overview</a></li>
+                <li><a href="#features">Features</a></li>
                 <li><a href="#architecture">Architecture</a></li>
-                <li><a href="#creator">Creator</a></li>
-                <li><a href="https://github.com/zehroque21/datalake" target="_blank">GitHub</a></li>
+                <li><a href="#prefect">Prefect</a></li>
+                <li><a href="#about">About</a></li>
             </ul>
         </nav>
     </header>
 
-    <section class="hero">
-        <div class="container">
-            <h1>DataLake AWS</h1>
-            <p>Modern data engineering platform with Apache Airflow and Delta Lake, automatically provisioned on AWS</p>
-            <a href="https://github.com/zehroque21/datalake" class="cta-button" target="_blank">
-                <i class="fab fa-github"></i> View on GitHub
-            </a>
-        </div>
-    </section>
-
-    <main class="main-content">
-        <section id="overview" class="section">
+    <main>
+        <section class="hero">
             <div class="container">
-                <h2>Overview</h2>
-                <p style="text-align: center; font-size: 1.1rem; margin-bottom: 3rem; color: #666; max-width: 800px; margin-left: auto; margin-right: auto;">
-                    A complete datalake solution that combines data engineering best practices with infrastructure as code, providing a robust environment for data processing and analysis at scale.
+                <h1>Modern Data Engineering Platform</h1>
+                <p>Secure, scalable data lake solution powered by <span class="highlight">Prefect</span> orchestration and AWS infrastructure</p>
+                <a href="https://github.com/zehroque21/datalake" class="cta-button">
+                    <i class="fab fa-github"></i> View on GitHub
+                </a>
+            </div>
+        </section>
+
+        <section id="prefect" class="prefect-highlight">
+            <div class="container">
+                <h2><i class="fas fa-water"></i> Powered by Prefect <span class="new-badge">NEW</span></h2>
+                <p>We've migrated from Airflow to Prefect for a modern, Python-first orchestration experience</p>
+                
+                <div class="prefect-features">
+                    <div class="prefect-feature">
+                        <i class="fab fa-python"></i>
+                        <h3>Python-First</h3>
+                        <p>Native Python workflows, no complex DAG syntax</p>
+                    </div>
+                    <div class="prefect-feature">
+                        <i class="fas fa-desktop"></i>
+                        <h3>Modern UI</h3>
+                        <p>Beautiful, intuitive interface with real-time monitoring</p>
+                    </div>
+                    <div class="prefect-feature">
+                        <i class="fas fa-rocket"></i>
+                        <h3>Simple Deployment</h3>
+                        <p>No dependency hell, works out of the box</p>
+                    </div>
+                    <div class="prefect-feature">
+                        <i class="fas fa-bug"></i>
+                        <h3>Better Debugging</h3>
+                        <p>Clear error messages and easy troubleshooting</p>
+                    </div>
+                    <div class="prefect-feature">
+                        <i class="fas fa-cloud"></i>
+                        <h3>Flexible Execution</h3>
+                        <p>Local development, cloud deployment, hybrid workflows</p>
+                    </div>
+                    <div class="prefect-feature">
+                        <i class="fas fa-shield-alt"></i>
+                        <h3>Type Safety</h3>
+                        <p>Built-in data validation and type checking</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="features">
+            <div class="container">
+                <h2 style="text-align: center; font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; color: #1e293b;">
+                    Platform Features
+                </h2>
+                <p style="text-align: center; color: #64748b; font-size: 1.1rem;">
+                    Complete data engineering solution with security-first approach
                 </p>
 
-                <div class="features">
+                <div class="features-grid">
                     <div class="feature-card">
                         <div class="feature-icon">
-                            <i class="fas fa-wind"></i>
+                            <i class="fas fa-water"></i>
                         </div>
-                        <h3>Apache Airflow</h3>
-                        <p>Advanced data pipeline orchestration with intuitive web interface and real-time monitoring.</p>
+                        <h3>Prefect Orchestration</h3>
+                        <p>Modern Python-first workflow orchestration with beautiful UI, real-time monitoring, and simple deployment. No more dependency hell!</p>
                     </div>
 
                     <div class="feature-card">
                         <div class="feature-icon">
-                            <i class="fas fa-layer-group"></i>
+                            <i class="fas fa-database"></i>
                         </div>
-                        <h3>Delta Lake</h3>
-                        <p>Reliable data storage with version control, ACID transactions, and performance optimizations.</p>
+                        <h3>Delta Lake Storage</h3>
+                        <p>Transactional and versioned data storage with ACID properties, time travel capabilities, and schema evolution support.</p>
                     </div>
 
                     <div class="feature-card">
                         <div class="feature-icon">
-                            <i class="fas fa-cloud-upload-alt"></i>
+                            <i class="fas fa-shield-alt"></i>
                         </div>
-                        <h3>AWS S3</h3>
-                        <p>Scalable and durable storage for raw and processed data with high availability.</p>
+                        <h3>Security Hardened</h3>
+                        <p>No SSH access, encrypted storage, restrictive security groups, IAM least privilege, and comprehensive security controls.</p>
                     </div>
 
                     <div class="feature-card">
                         <div class="feature-icon">
-                            <i class="fas fa-server"></i>
+                            <i class="fas fa-code"></i>
                         </div>
-                        <h3>Optimized EC2</h3>
-                        <p>EC2 instance automatically configured with all necessary dependencies for data processing.</p>
+                        <h3>Infrastructure as Code</h3>
+                        <p>Terraform-managed infrastructure with automated deployment via GitHub Actions, ensuring reproducible and version-controlled environments.</p>
                     </div>
 
                     <div class="feature-card">
                         <div class="feature-icon">
-                            <i class="fas fa-code-branch"></i>
+                            <i class="fas fa-laptop-code"></i>
                         </div>
-                        <h3>Integrated CI/CD</h3>
-                        <p>Automated deployment via GitHub Actions with Terraform for infrastructure as code.</p>
+                        <h3>Local Development</h3>
+                        <p>Docker-based local environment that mirrors production, enabling seamless development and testing of data pipelines.</p>
                     </div>
 
                     <div class="feature-card">
                         <div class="feature-icon">
                             <i class="fas fa-chart-line"></i>
                         </div>
-                        <h3>Analytics Ready</h3>
-                        <p>Environment prepared for advanced analytics with Python, Spark, and visualization tools.</p>
+                        <h3>Monitoring & Quality</h3>
+                        <p>Comprehensive data quality monitoring, automated alerts, and observability across the entire data pipeline ecosystem.</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="architecture" class="section">
+        <section id="architecture" class="architecture">
             <div class="container">
-                <div class="architecture">
-                    <h3><i class="fas fa-sitemap"></i> Solution Architecture</h3>
-                    
+                <h2>Solution Architecture</h2>
+                <p style="text-align: center; color: #64748b; margin-bottom: 3rem;">
+                    Modern data platform with unified development and production environments
+                </p>
+
+                <div class="flow-diagram">
+                    <div class="flow-step">
+                        <i class="fab fa-github"></i>
+                        <h3>GitHub</h3>
+                        <p>Source Control & CI/CD</p>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">
+                        <i class="fas fa-cogs"></i>
+                        <h3>Terraform</h3>
+                        <p>Infrastructure as Code</p>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">
+                        <i class="fas fa-server"></i>
+                        <h3>AWS EC2</h3>
+                        <p>Prefect Server</p>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">
+                        <i class="fas fa-cloud"></i>
+                        <h3>AWS S3</h3>
+                        <p>Delta Lake Storage</p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 3rem;">
+                    <h3 style="text-align: center; margin-bottom: 2rem; color: #1e293b;">Development Workflow</h3>
                     <div class="flow-diagram">
-                        <div class="flow-item">
-                            <i class="fab fa-github" style="font-size: 2rem; color: #333; margin-bottom: 0.5rem;"></i>
-                            <h4>GitHub Actions</h4>
-                            <p>CI/CD Pipeline</p>
+                        <div class="flow-step">
+                            <i class="fab fa-docker"></i>
+                            <h3>Local Dev</h3>
+                            <p>Docker + Prefect</p>
                         </div>
-                        
-                        <div class="flow-arrow">
-                            <i class="fas fa-arrow-right"></i>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">
+                            <i class="fas fa-code-branch"></i>
+                            <h3>Git Push</h3>
+                            <p>Shared Flows</p>
                         </div>
-                        
-                        <div class="flow-item">
-                            <i class="fas fa-hammer" style="font-size: 2rem; color: #ff6b35; margin-bottom: 0.5rem;"></i>
-                            <h4>Terraform</h4>
-                            <p>Infrastructure as Code</p>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <h3>Auto Deploy</h3>
+                            <p>Production Ready</p>
                         </div>
-                        
-                        <div class="flow-arrow">
-                            <i class="fas fa-arrow-right"></i>
-                        </div>
-                        
-                        <div class="flow-item">
-                            <i class="fab fa-aws" style="font-size: 2rem; color: #ff9900; margin-bottom: 0.5rem;"></i>
-                            <h4>AWS EC2</h4>
-                            <p>Apache Airflow</p>
-                        </div>
-                        
-                        <div class="flow-arrow">
-                            <i class="fas fa-arrow-right"></i>
-                        </div>
-                        
-                        <div class="flow-item">
-                            <i class="fas fa-database" style="font-size: 2rem; color: #4CAF50; margin-bottom: 0.5rem;"></i>
-                            <h4>AWS S3</h4>
-                            <p>Delta Lake Storage</p>
-                        </div>
-                    </div>
-
-                    <div style="margin-top: 2rem; padding: 2rem; background: white; border-radius: 10px;">
-                        <h4 style="margin-bottom: 1rem; color: #333;">Data Flow:</h4>
-                        <ol style="color: #666; line-height: 1.8;">
-                            <li><strong>Ingestion:</strong> Data is collected from various sources through Airflow pipelines</li>
-                            <li><strong>Processing:</strong> Data transformation and cleaning using Python and Spark</li>
-                            <li><strong>Storage:</strong> Processed data is saved in Delta Lake format on S3</li>
-                            <li><strong>Analysis:</strong> Data is ready for queries and advanced analytics</li>
-                        </ol>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="creator" class="section">
+        <section class="features">
             <div class="container">
-                <div class="creator-section">
-                    <div class="creator-content">
-                        <div class="creator-info">
-                            <h3><i class="fas fa-user-circle"></i> About the Creator</h3>
-                            <p><strong>Amado Roque</strong> is a data engineer specialized in big data and analytics solutions, with extensive experience in modern data architectures and cloud technologies.</p>
-                            
-                            <p>With a solid engineering background and postgraduate studies in Business Intelligence, Amado combines deep technical knowledge with strategic business vision to create data solutions that generate real value.</p>
-                            
-                            <div class="skills">
-                                <span class="skill-tag">Python</span>
-                                <span class="skill-tag">Apache Spark</span>
-                                <span class="skill-tag">Delta Lake</span>
-                                <span class="skill-tag">Apache Airflow</span>
-                                <span class="skill-tag">AWS</span>
-                                <span class="skill-tag">Terraform</span>
-                                <span class="skill-tag">SQL</span>
-                                <span class="skill-tag">Data Engineering</span>
-                            </div>
-                            
-                            <div class="social-links">
-                                <a href="https://www.linkedin.com/in/amado-roque/" target="_blank" title="LinkedIn">
-                                    <i class="fab fa-linkedin"></i>
-                                </a>
-                                <a href="https://github.com/zehroque21" target="_blank" title="GitHub">
-                                    <i class="fab fa-github"></i>
-                                </a>
-                            </div>
+                <h2 style="text-align: center; font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; color: #1e293b;">
+                    Pipeline Categories
+                </h2>
+                <p style="text-align: center; color: #64748b; font-size: 1.1rem; margin-bottom: 3rem;">
+                    Organized flows for different data engineering use cases
+                </p>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-flask"></i>
                         </div>
-                        
-                        <div style="text-align: center;">
-                            <div style="background: rgba(255, 255, 255, 0.1); padding: 2rem; border-radius: 15px; backdrop-filter: blur(10px);">
-                                <i class="fas fa-quote-left" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
-                                <p style="font-size: 1.2rem; font-style: italic; margin-bottom: 1rem;">
-                                    "Transforming data into actionable insights is more than technology - it's about creating real value and business impact."
-                                </p>
-                                <p style="font-weight: 600;">- Amado Roque</p>
-                            </div>
-                        </div>
+                        <h3>Examples</h3>
+                        <p>Learning flows and tutorials for getting started with Prefect, demonstrating best practices and common patterns.</p>
                     </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-exchange-alt"></i>
+                        </div>
+                        <h3>ETL Pipelines</h3>
+                        <p>Production-ready extract, transform, load workflows for S3 data lake operations with Delta Lake format.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <h3>ML Workflows</h3>
+                        <p>Machine learning pipelines including feature engineering, model training, validation, and deployment automation.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <h3>Monitoring</h3>
+                        <p>Data quality monitoring, system health checks, anomaly detection, and automated alerting systems.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="about" id="about">
+            <div class="container">
+                <h2>About the Creator</h2>
+                <p style="color: #64748b; font-size: 1.1rem; max-width: 600px; margin: 0 auto;">
+                    <strong>Amado Roque</strong> is a Data Engineer specialized in modern data orchestration and secure analytics solutions. 
+                    This platform showcases best practices in data engineering with a focus on security, scalability, and developer experience.
+                </p>
+
+                <div class="creator-info">
+                    <div class="creator-links">
+                        <a href="https://www.linkedin.com/in/amado-roque/" class="social-link" title="LinkedIn">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                        <a href="https://github.com/zehroque21" class="social-link" title="GitHub">
+                            <i class="fab fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="tech-stack">
+                    <span class="tech-badge"><i class="fas fa-water"></i> Prefect</span>
+                    <span class="tech-badge"><i class="fab fa-aws"></i> AWS</span>
+                    <span class="tech-badge"><i class="fas fa-database"></i> Delta Lake</span>
+                    <span class="tech-badge"><i class="fab fa-docker"></i> Docker</span>
+                    <span class="tech-badge"><i class="fas fa-code"></i> Terraform</span>
+                    <span class="tech-badge"><i class="fab fa-python"></i> Python</span>
                 </div>
             </div>
         </section>
@@ -521,7 +605,12 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2025 DataLake AWS. Developed with <i class="fas fa-heart" style="color: #ff6b6b;"></i> by Amado Roque</p>
+            <p>&copy; 2025 DataLake AWS Platform. Built with ❤️ and modern data engineering practices.</p>
+            <p style="margin-top: 0.5rem; color: #64748b;">
+                <i class="fas fa-shield-alt"></i> Security-first • 
+                <i class="fas fa-water"></i> Prefect-powered • 
+                <i class="fas fa-code"></i> Open Source
+            </p>
         </div>
     </footer>
 
@@ -540,14 +629,27 @@
             });
         });
 
-        // Add scroll effect to header
-        window.addEventListener('scroll', function() {
-            const header = document.querySelector('header');
-            if (window.scrollY > 100) {
-                header.style.background = 'rgba(255, 255, 255, 0.98)';
-            } else {
-                header.style.background = 'rgba(255, 255, 255, 0.95)';
-            }
+        // Add animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all feature cards and flow steps
+        document.querySelectorAll('.feature-card, .flow-step, .prefect-feature').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
         });
     </script>
 </body>
