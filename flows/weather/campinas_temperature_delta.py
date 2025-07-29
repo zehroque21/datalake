@@ -116,14 +116,12 @@ def get_spark_session() -> SparkSession:
     
     builder = SparkSession.builder \
         .appName("CampinasTemperatureDelta") \
-        .master("spark://spark:7077") \
+        .master("local[*]") \
         .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
         .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
         .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer") \
         .config("spark.driver.memory", "1g") \
-        .config("spark.executor.memory", "1g") \
-        .config("spark.driver.host", "prefect-server") \
-        .config("spark.driver.bindAddress", "0.0.0.0")
+        .config("spark.executor.memory", "1g")
     
     spark = configure_spark_with_delta_pip(builder).getOrCreate()
     spark.sparkContext.setLogLevel("WARN")
