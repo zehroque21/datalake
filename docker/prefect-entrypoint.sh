@@ -55,30 +55,28 @@ except Exception as e:
     print(f'❌ Pipeline error: {e}')
 "
 
-# Deploy the Delta temperature pipeline with scheduling
-echo "📅 Deploying scheduled Delta temperature monitoring..."
+# Deploy the temperature pipeline with scheduling
+echo "📅 Deploying scheduled temperature monitoring..."
 cd /app/flows
 python -c "
 import sys
 sys.path.append('/app/flows')
-from weather.campinas_temperature_delta import campinas_temperature_delta_pipeline
+from weather.campinas_temperature import campinas_temperature_pipeline
 from prefect.deployments import Deployment
 from prefect.server.schemas.schedules import IntervalSchedule
 from datetime import timedelta
 
 try:
     deployment = Deployment.build_from_flow(
-        flow=campinas_temperature_delta_pipeline,
-        name='campinas-temperature-delta-monitor',
+        flow=campinas_temperature_pipeline,
+        name='campinas-temperature-monitor',
         schedule=IntervalSchedule(interval=timedelta(minutes=30)),
-        work_pool_name='default-agent-pool',
-        tags=['weather', 'campinas', 'delta-lake', 'temperature']
+        work_pool_name='default-agent-pool'
     )
     deployment.apply()
-    print('✅ Delta temperature monitoring deployment created successfully!')
+    print('✅ Temperature monitoring deployment created successfully!')
 except Exception as e:
-    print(f'❌ Deployment error: {e}')
-" &
+    print(f'❌ Deployment error: {e}')"" &
 DEPLOY_PID=$!
 
 echo "🎉 Data Lake environment fully initialized!"
@@ -87,8 +85,8 @@ echo "📊 Apache Superset available at: http://localhost:8088 (admin/admin123)"
 echo "📚 OpenMetadata available at: http://localhost:8585"
 echo "⚡ Spark UI available at: http://localhost:8080"
 echo ""
-echo "🌡️ Temperature Delta pipeline is running automatically every 30 minutes"
-echo "🗂️ Data is being stored in Delta Lake format in /app/s3/"
+echo "🌡️ Temperature pipeline is running automatically every 30 minutes"
+echo "🗂️ Data is being stored in JSON/CSV format in /app/s3/"
 echo ""
 echo "🔍 To view the data:"
 echo "   Staging: docker compose exec prefect-server cat /app/s3/staging/weather/campinas_temperature_latest.json"
