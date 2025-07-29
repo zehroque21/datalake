@@ -76,7 +76,8 @@ try:
     deployment.apply()
     print('✅ Delta temperature monitoring deployment created successfully!')
 except Exception as e:
-    print(f'❌ Deployment error: {e}')"" &
+    print(f'❌ Deployment error: {e}')
+" &
 DEPLOY_PID=$!
 
 echo "🎉 Data Lake environment fully initialized!"
