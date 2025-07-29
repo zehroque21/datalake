@@ -68,8 +68,10 @@ services:
       - DB_HOST=openmetadata-db
       - DB_PORT=5432
       - DB_DATABASE=openmetadata_db
+      - MIGRATION_LIMIT_PARAM=1200
       - ELASTICSEARCH_HOST=elasticsearch
       - ELASTICSEARCH_PORT=9200
+    command: ["./bootstrap/bootstrap_storage.sh", "migrate-all"]
     depends_on:
       - openmetadata-db
       - elasticsearch
