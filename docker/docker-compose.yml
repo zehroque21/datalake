@@ -53,6 +53,25 @@ services:
     networks:
       - datalake
 
+  # OpenMetadata Database Initialization
+  openmetadata-init:
+    image: openmetadata/server:latest
+    environment:
+      - DB_DRIVER_CLASS=org.postgresql.Driver
+      - DB_SCHEME=postgresql
+      - DB_USE_SSL=false
+      - DB_USER=openmetadata
+      - DB_USER_PASSWORD=openmetadata123
+      - DB_HOST=openmetadata-db
+      - DB_PORT=5432
+      - DB_DATABASE=openmetadata_db
+    command: ["./bootstrap/openmetadata-ops.sh", "migrate"]
+    depends_on:
+      - openmetadata-db
+    networks:
+      - datalake
+    restart: "no"
+
   # OpenMetadata - Data Catalog
   openmetadata:
     image: openmetadata/server:latest
@@ -72,7 +91,7 @@ services:
       - ELASTICSEARCH_HOST=elasticsearch
       - ELASTICSEARCH_PORT=9200
     depends_on:
-      - openmetadata-db
+      - openmetadata-init
       - elasticsearch
     volumes:
       - s3_data:/app/s3:ro  # Read-only access to data
