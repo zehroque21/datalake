@@ -72,6 +72,18 @@ services:
       - datalake
     restart: "no"
 
+  # Elasticsearch Indices Initialization
+  elasticsearch-init:
+    image: curlimages/curl:latest
+    volumes:
+      - ./init-elasticsearch-indices.sh:/init-elasticsearch-indices.sh:ro
+    command: ["sh", "/init-elasticsearch-indices.sh"]
+    depends_on:
+      - elasticsearch
+    networks:
+      - datalake
+    restart: "no"
+
   # OpenMetadata - Data Catalog
   openmetadata:
     image: openmetadata/server:latest
@@ -93,6 +105,7 @@ services:
     depends_on:
       - openmetadata-init
       - elasticsearch
+      - elasticsearch-init
     volumes:
       - s3_data:/app/s3:ro  # Read-only access to data
     networks:
