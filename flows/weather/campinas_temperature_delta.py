@@ -257,8 +257,7 @@ def create_delta_metadata(spark: SparkSession, delta_path: str, data: Dict[str, 
 
 @flow(
     name="Campinas Temperature Delta Pipeline",
-    description="Collect temperature data and store in Delta Lake format",
-    tags=["weather", "campinas", "delta-lake", "temperature"]
+    description="Collect temperature data and store in Delta Lake format"
 )
 def campinas_temperature_delta_pipeline():
     """Main pipeline for collecting and storing temperature data in Delta Lake"""
