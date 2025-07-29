@@ -9,13 +9,12 @@ ENV PREFECT_API_URL=http://localhost:4200/api
 RUN apt-get update && apt-get install -y \
     curl \
     git \
-    openjdk-11-jdk \
+    default-jdk \
     procps \
     && rm -rf /var/lib/apt/lists/*
 
-# Set JAVA_HOME environment variable (auto-detect architecture)
-RUN echo "export JAVA_HOME=\$(readlink -f /usr/bin/java | sed 's:/bin/java::')" >> /etc/environment
-ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+# Set JAVA_HOME environment variable
+ENV JAVA_HOME=/usr/lib/jvm/default-java
 ENV PATH=$PATH:$JAVA_HOME/bin
 
 # Create prefect user
