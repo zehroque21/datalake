@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataLake Native - Dashboard</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <style>
+        .card {
+            @apply bg-white rounded-lg shadow-md p-6 border border-gray-100;
+        }
+        .metric-card {
+            @apply card text-center;
+        }
+        .status-success { @apply text-green-600 bg-green-100 px-2 py-1 rounded-full text-xs font-medium; }
+        .status-error { @apply text-red-600 bg-red-100 px-2 py-1 rounded-full text-xs font-medium; }
+        .status-running { @apply text-blue-600 bg-blue-100 px-2 py-1 rounded-full text-xs font-medium; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div x-data="dashboard()" x-init="init()">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center py-4">
+                    <div class="flex items-center">
+                        <h1 class="text-2xl font-bold text-gray-900">
+                            🌊 DataLake Native
+                        </h1>
+                        <span class="ml-3 px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                            v1.0 - Simples
+                        </span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button @click="refreshData()" 
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                            🔄 Atualizar
+                        </button>
+                        <button @click="triggerJob('weather_collection')" 
+                                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                            ▶️ Executar Job
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            
+            <!-- Métricas Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="metric-card">
+                    <div class="text-3xl font-bold text-blue-600" x-text="metrics.jobs_today || 0"></div>
+                    <div class="text-sm text-gray-600 mt-1">Jobs Hoje</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="text-3xl font-bold text-green-600" x-text="metrics.successful_jobs || 0"></div>
+                    <div class="text-sm text-gray-600 mt-1">Sucessos</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="text-3xl font-bold text-red-600" x-text="metrics.failed_jobs || 0"></div>
+                    <div class="text-sm text-gray-600 mt-1">Falhas</div>
+                </div>
+                
+                <div class="metric-card">
+                    <div class="text-3xl font-bold text-purple-600" x-text="metrics.success_rate + '%' || '0%'"></div>
+                    <div class="text-sm text-gray-600 mt-1">Taxa Sucesso</div>
+                </div>
+            </div>
+
+            <!-- Gráficos -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <!-- Gráfico de Temperatura -->
+                <div class="card">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-semibold text-gray-900">🌡️ Temperatura (24h)</h2>
+                        <span class="text-sm text-gray-500" x-text="'Última: ' + (lastTemperature || 'N/A') + '°C'"></span>
+                    </div>
+                    <canvas id="temperatureChart" width="400" height="200"></canvas>
+                </div>
+                
+                <!-- Status dos Jobs -->
+                <div class="card">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">📊 Status dos Jobs</h2>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium text-gray-700">Coleta Meteorológica</span>
+                            <span x-show="metrics.last_execution" 
+                                  :class="'status-' + (metrics.last_execution?.status || 'unknown')"
+                                  x-text="metrics.last_execution?.status || 'N/A'">
+                            </span>
+                        </div>
+                        <div class="text-xs text-gray-500" x-show="metrics.last_execution">
+                            Última execução: <span x-text="formatDateTime(metrics.last_execution?.timestamp)"></span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-green-600 h-2 rounded-full" 
+                                 :style="'width: ' + (metrics.success_rate || 0) + '%'"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabela de Execuções -->
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-900">📋 Últimas Execuções</h2>
+                    <span class="text-sm text-gray-500" x-text="'Total: ' + (jobExecutions.length || 0)"></span>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duração</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registros</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <template x-for="execution in jobExecutions.slice(0, 10)" :key="execution.id">
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" x-text="execution.job_name"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span :class="'status-' + execution.status" x-text="execution.status"></span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="formatDuration(execution.duration_seconds)"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="execution.records_processed || 0"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="formatDateTime(execution.start_time)"></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function dashboard() {
+            return {
+                metrics: {},
+                weatherData: [],
+                jobExecutions: [],
+                lastTemperature: null,
+                temperatureChart: null,
+
+                async init() {
+                    await this.loadData();
+                    this.initCharts();
+                    
+                    // Auto-refresh a cada 30 segundos
+                    setInterval(() => this.refreshData(), 30000);
+                },
+
+                async loadData() {
+                    try {
+                        // Carregar métricas
+                        const metricsResponse = await fetch('/api/metrics');
+                        this.metrics = await metricsResponse.json();
+
+                        // Carregar dados meteorológicos
+                        const weatherResponse = await fetch('/api/weather');
+                        this.weatherData = await weatherResponse.json();
+                        
+                        if (this.weatherData.length > 0) {
+                            this.lastTemperature = this.weatherData[this.weatherData.length - 1].temperature;
+                        }
+
+                        // Carregar execuções
+                        const jobsResponse = await fetch('/api/jobs');
+                        const jobsData = await jobsResponse.json();
+                        this.jobExecutions = jobsData.executions || [];
+
+                        this.updateCharts();
+                    } catch (error) {
+                        console.error('Erro ao carregar dados:', error);
+                    }
+                },
+
+                async refreshData() {
+                    await this.loadData();
+                },
+
+                async triggerJob(jobName) {
+                    try {
+                        const response = await fetch(`/api/jobs/trigger/${jobName}`);
+                        const result = await response.json();
+                        
+                        if (response.ok) {
+                            alert('Job executado com sucesso!');
+                            setTimeout(() => this.refreshData(), 2000);
+                        } else {
+                            alert('Erro: ' + result.error);
+                        }
+                    } catch (error) {
+                        alert('Erro ao executar job: ' + error.message);
+                    }
+                },
+
+                initCharts() {
+                    const ctx = document.getElementById('temperatureChart').getContext('2d');
+                    this.temperatureChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: [],
+                            datasets: [{
+                                label: 'Temperatura (°C)',
+                                data: [],
+                                borderColor: 'rgb(59, 130, 246)',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: false,
+                                    title: {
+                                        display: true,
+                                        text: 'Temperatura (°C)'
+                                    }
+                                },
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Horário'
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            }
+                        }
+                    });
+                },
+
+                updateCharts() {
+                    if (this.temperatureChart && this.weatherData.length > 0) {
+                        const labels = this.weatherData.map(d => new Date(d.timestamp).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}));
+                        const temperatures = this.weatherData.map(d => d.temperature);
+
+                        this.temperatureChart.data.labels = labels;
+                        this.temperatureChart.data.datasets[0].data = temperatures;
+                        this.temperatureChart.update();
+                    }
+                },
+
+                formatDateTime(dateString) {
+                    if (!dateString) return 'N/A';
+                    return new Date(dateString).toLocaleString('pt-BR');
+                },
+
+                formatDuration(seconds) {
+                    if (!seconds) return 'N/A';
+                    return seconds < 60 ? `${seconds.toFixed(1)}s` : `${(seconds/60).toFixed(1)}min`;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+

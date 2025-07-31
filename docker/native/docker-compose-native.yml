@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # DataLake Native App
+  datalake-native:
+    build:
+      context: .
+      dockerfile: Dockerfile-native
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - DATABASE_URL=sqlite:///data/datalake.db
+    volumes:
+      - native_data:/app/data
+      - ./app:/app  # Para desenvolvimento - remover em produção
+    networks:
+      - datalake-native
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # PostgreSQL (para evolução futura)
+  postgres-native:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=datalake_native
+      - POSTGRES_USER=datalake
+      - POSTGRES_PASSWORD=datalake123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - datalake-native
+    restart: unless-stopped
+    profiles:
+      - postgres  # Ativar com: docker compose --profile postgres up
+
+volumes:
+  native_data:
+    driver: local
+  postgres_data:
+    driver: local
+
+networks:
+  datalake-native:
+    driver: bridge
+
