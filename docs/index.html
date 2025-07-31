@@ -3,416 +3,639 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DataLake Native - Lightweight Data Lake Solution</title>
-    <meta name="description" content="A lightweight, file-based data lake solution with modern web dashboard for real-time monitoring and job orchestration.">
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    
-    <!-- Inter Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
+    <title>DataLake Native - Modern Data Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        
-        .gradient-bg {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+        :root {
+            --primary: #c0392b; /* vermelho sofisticado */
+            --primary-dark: #922b21; /* vermelho escuro */
+            --secondary: #f6e8e6; /* vermelho claro, suave */
+            --accent: #e67e22; /* laranja queimado para destaque */
+            --text-dark: #2d2320;
+            --text-light: #8d6e63;
+            --bg-light: #fdf6f4;
+            --white: #ffffff;
+            --shadow: 0 4px 24px rgba(192, 57, 43, 0.07);
+            --shadow-hover: 0 8px 32px rgba(192, 57, 43, 0.12);
         }
-        
-        .glassmorphism {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        
-        .hero-gradient {
-            background: linear-gradient(135deg, #3b82f6 0%, #10b981 100%);
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background: var(--bg-light);
+            min-height: 100vh;
         }
-        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        header {
+            background: var(--white);
+            box-shadow: var(--shadow);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-dark);
+            font-weight: 500;
+            transition: color 0.2s;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+        .nav-links a:hover {
+            background: var(--secondary);
+            color: var(--primary-dark);
+        }
+
+        main {
+            margin-top: 80px;
+            padding: 2rem 0;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 4.5rem 0 3.5rem 0;
+            color: var(--text-dark);
+            background: var(--white);
+            border-radius: 0 0 32px 32px;
+            box-shadow: 0 2px 24px rgba(30,64,175,0.04);
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .highlight {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--primary);
+            color: var(--white);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+            box-shadow: var(--shadow);
+        }
+
+        .cta-button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .section {
+            padding: 4rem 0;
+        }
+
+        .section h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            margin-bottom: 3rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
         .feature-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 14px;
+            text-align: center;
+            transition: box-shadow 0.2s, transform 0.2s;
+            border: 1px solid #e5e7eb;
+            box-shadow: var(--shadow);
         }
-        
+
         .feature-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            box-shadow: var(--shadow-hover);
         }
-        
-        .pulse-dot {
-            animation: pulse 2s infinite;
+
+        .feature-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
         }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
         }
-        
-        .code-block {
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 8px;
+
+        .feature-card p {
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        .deployment-highlight {
+            background: var(--secondary);
+            color: var(--text-dark);
+            padding: 3rem 0;
+            border-radius: 24px;
+            margin: 2rem 0;
+        }
+
+        .deployment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .deployment-option {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s;
+        }
+
+        .deployment-option:hover {
+            transform: translateY(-3px);
+        }
+
+        .deployment-icon {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .new-badge {
+            background: var(--accent);
+            color: var(--white);
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .architecture-diagram {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 16px;
+            margin: 2rem 0;
+            box-shadow: var(--shadow);
+        }
+
+        .flow-diagram {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin: 2rem 0;
+        }
+
+        .flow-step {
+            background: var(--bg-light);
+            border: 2px solid var(--primary);
             padding: 1rem;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 0.875rem;
-            overflow-x: auto;
+            border-radius: 12px;
+            text-align: center;
+            min-width: 120px;
+            transition: all 0.2s;
+        }
+
+        .flow-step:hover {
+            background: var(--secondary);
+            transform: scale(1.05);
+        }
+
+        .flow-arrow {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        .creator-section {
+            background: var(--white);
+            padding: 3rem;
+            border-radius: 24px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            margin: 2rem 0;
+        }
+
+        .creator-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 1.5rem auto;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: var(--white);
+        }
+
+        .creator-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 0.1rem;
+        }
+
+        .creator-role {
+            color: var(--text-light);
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .creator-bio {
+            color: var(--text-dark);
+            font-size: 1rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .creator-socials {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 1.2rem;
+        }
+
+        .social-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--secondary);
+            color: var(--primary-dark);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.3rem;
+            text-decoration: none;
+            transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+            box-shadow: 0 2px 8px rgba(30,64,175,0.08);
+        }
+        .social-link:hover {
+            background: var(--primary);
+            color: #fff;
+            transform: scale(1.08);
+            box-shadow: 0 4px 16px rgba(30,64,175,0.13);
+        }
+
+        .tech-stack {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .tech-badge {
+            background: var(--bg-light);
+            color: var(--text-dark);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border: 1px solid #e5e7eb;
+        }
+
+        footer {
+            background: var(--text-dark);
+            color: var(--white);
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 4rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .flow-diagram {
+                flex-direction: column;
+            }
+            
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
         }
     </style>
 </head>
-<body class="gradient-bg text-white">
-    <!-- Navigation -->
-    <nav class="glassmorphism border-b border-slate-600 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center py-4">
-                <div class="flex items-center">
-                    <h1 class="text-2xl font-bold text-white">🌊 DataLake Native</h1>
-                    <span class="ml-3 px-3 py-1 bg-blue-600 text-blue-100 text-xs font-medium rounded-full">
-                        v2.0
-                    </span>
-                </div>
-                <div class="flex items-center space-x-6">
-                    <a href="#features" class="text-slate-300 hover:text-white transition-colors">Features</a>
-                    <a href="#architecture" class="text-slate-300 hover:text-white transition-colors">Architecture</a>
-                    <a href="#installation" class="text-slate-300 hover:text-white transition-colors">Installation</a>
-                    <a href="https://github.com/zehroque21/datalake" target="_blank" 
-                       class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                        <i data-lucide="github" class="w-4 h-4 inline mr-2"></i>
-                        GitHub
-                    </a>
-                </div>
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">
+                <i class="fas fa-database"></i> DataLake Native
             </div>
-        </div>
-    </nav>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#deployment">Deployment</a></li>
+                <li><a href="#about">About</a></li>
+            </ul>
+        </nav>
+    </header>
 
-    <!-- Hero Section -->
-    <section class="py-20">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div class="hero-gradient inline-block text-transparent bg-clip-text mb-6">
-                <h1 class="text-5xl md:text-7xl font-bold">
-                    DataLake Native
-                </h1>
-            </div>
-            <p class="text-xl md:text-2xl text-slate-300 mb-8 max-w-3xl mx-auto">
-                A lightweight, file-based data lake solution with modern web dashboard for real-time monitoring and job orchestration.
-            </p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="#installation" 
-                   class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg text-lg font-medium transition-colors">
-                    <i data-lucide="download" class="w-5 h-5 inline mr-2"></i>
-                    Get Started
-                </a>
-                <a href="https://github.com/zehroque21/datalake" target="_blank"
-                   class="glassmorphism hover:bg-white/20 text-white px-8 py-4 rounded-lg text-lg font-medium transition-colors">
-                    <i data-lucide="github" class="w-5 h-5 inline mr-2"></i>
-                    View Source
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h1>DataLake Native</h1>
+                <p>Lightweight, file-based data lake with modern web dashboard and <span class="highlight">dual deployment</span> architecture</p>
+                <a href="https://github.com/zehroque21/datalake" class="cta-button">
+                    <i class="fab fa-github"></i> View on GitHub
                 </a>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Features Section -->
-    <section id="features" class="py-20">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-white mb-4">✨ Key Features</h2>
-                <p class="text-xl text-slate-300 max-w-2xl mx-auto">
-                    Built for simplicity, performance, and scalability
-                </p>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Feature 1 -->
-                <div class="glassmorphism rounded-xl p-6 feature-card">
-                    <div class="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center mb-4">
-                        <i data-lucide="database" class="w-6 h-6 text-white"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-white mb-2">File-Based Storage</h3>
-                    <p class="text-slate-300">
-                        Zero database dependencies. Pure JSON file storage that's S3-compatible and cloud-ready.
-                    </p>
-                </div>
-
-                <!-- Feature 2 -->
-                <div class="glassmorphism rounded-xl p-6 feature-card">
-                    <div class="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center mb-4">
-                        <i data-lucide="activity" class="w-6 h-6 text-white"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-white mb-2">Real-Time Dashboard</h3>
-                    <p class="text-slate-300">
-                        Modern web interface with live metrics, data visualization, and job monitoring.
-                    </p>
-                </div>
-
-                <!-- Feature 3 -->
-                <div class="glassmorphism rounded-xl p-6 feature-card">
-                    <div class="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center mb-4">
-                        <i data-lucide="clock" class="w-6 h-6 text-white"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-white mb-2">Job Orchestration</h3>
-                    <p class="text-slate-300">
-                        Built-in scheduler with execution tracking, error handling, and manual triggers.
-                    </p>
-                </div>
-
-                <!-- Feature 4 -->
-                <div class="glassmorphism rounded-xl p-6 feature-card">
-                    <div class="w-12 h-12 bg-orange-600 rounded-lg flex items-center justify-center mb-4">
-                        <i data-lucide="cloud" class="w-6 h-6 text-white"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-white mb-2">Weather Pipeline</h3>
-                    <p class="text-slate-300">
-                        Example data collection pipeline for meteorological data with OpenWeatherMap integration.
-                    </p>
-                </div>
-
-                <!-- Feature 5 -->
-                <div class="glassmorphism rounded-xl p-6 feature-card">
-                    <div class="w-12 h-12 bg-red-600 rounded-lg flex items-center justify-center mb-4">
-                        <i data-lucide="container" class="w-6 h-6 text-white"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-white mb-2">Docker Ready</h3>
-                    <p class="text-slate-300">
-                        Containerized deployment with Docker Compose for any environment.
-                    </p>
-                </div>
-
-                <!-- Feature 6 -->
-                <div class="glassmorphism rounded-xl p-6 feature-card">
-                    <div class="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center mb-4">
-                        <i data-lucide="smartphone" class="w-6 h-6 text-white"></i>
-                    </div>
-                    <h3 class="text-xl font-semibold text-white mb-2">Responsive Design</h3>
-                    <p class="text-slate-300">
-                        Modern glassmorphism UI that works perfectly on desktop and mobile devices.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Architecture Section -->
-    <section id="architecture" class="py-20">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-white mb-4">🏗️ Architecture</h2>
-                <p class="text-xl text-slate-300 max-w-2xl mx-auto">
-                    Simple, scalable, and production-ready architecture
-                </p>
-            </div>
-            
-            <div class="glassmorphism rounded-xl p-8">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                    <!-- Architecture Diagram -->
-                    <div>
-                        <h3 class="text-2xl font-semibold text-white mb-6">System Components</h3>
-                        <div class="space-y-4">
-                            <div class="flex items-center space-x-4">
-                                <div class="w-3 h-3 bg-blue-500 rounded-full pulse-dot"></div>
-                                <span class="text-slate-300">Web Dashboard (Flask + Alpine.js)</span>
-                            </div>
-                            <div class="flex items-center space-x-4">
-                                <div class="w-3 h-3 bg-green-500 rounded-full pulse-dot"></div>
-                                <span class="text-slate-300">Job Scheduler (APScheduler)</span>
-                            </div>
-                            <div class="flex items-center space-x-4">
-                                <div class="w-3 h-3 bg-purple-500 rounded-full pulse-dot"></div>
-                                <span class="text-slate-300">File Storage (JSON-based)</span>
-                            </div>
-                            <div class="flex items-center space-x-4">
-                                <div class="w-3 h-3 bg-orange-500 rounded-full pulse-dot"></div>
-                                <span class="text-slate-300">Weather Collection Pipeline</span>
-                            </div>
-                            <div class="flex items-center space-x-4">
-                                <div class="w-3 h-3 bg-red-500 rounded-full pulse-dot"></div>
-                                <span class="text-slate-300">Real-time Metrics & Monitoring</span>
-                            </div>
+        <section class="deployment-highlight">
+            <div class="container">
+                <h2><i class="fas fa-rocket"></i> Dual Deployment Architecture <span class="new-badge">UPDATED</span></h2>
+                <p>Choose your deployment strategy: Docker for local development, AWS for production</p>
+                
+                <div class="deployment-grid">
+                    <div class="deployment-option">
+                        <div class="deployment-icon">
+                            <i class="fab fa-docker"></i>
+                        </div>
+                        <h3>Local Development</h3>
+                        <p>Docker Native solution for testing and development</p>
+                        <div class="tech-stack">
+                            <span class="tech-badge">Flask</span>
+                            <span class="tech-badge">JSON Storage</span>
+                            <span class="tech-badge">Docker</span>
                         </div>
                     </div>
-                    
-                    <!-- Storage Structure -->
-                    <div>
-                        <h3 class="text-2xl font-semibold text-white mb-6">Storage Structure</h3>
-                        <div class="code-block">
-                            <div class="text-green-400">data/</div>
-                            <div class="ml-4 text-blue-400">├── raw/weather/</div>
-                            <div class="ml-8 text-slate-300"># Raw weather data (JSON)</div>
-                            <div class="ml-4 text-blue-400">├── processed/</div>
-                            <div class="ml-8 text-slate-300"># Processed datasets</div>
-                            <div class="ml-4 text-blue-400">├── logs/</div>
-                            <div class="ml-8 text-slate-300"># Job execution logs</div>
-                            <div class="ml-4 text-blue-400">└── metrics/</div>
-                            <div class="ml-8 text-slate-300"># Calculated metrics</div>
+                    <div class="deployment-option">
+                        <div class="deployment-icon">
+                            <i class="fab fa-aws"></i>
+                        </div>
+                        <h3>AWS Production</h3>
+                        <p>Terraform-managed infrastructure with Prefect orchestration</p>
+                        <div class="tech-stack">
+                            <span class="tech-badge">EC2</span>
+                            <span class="tech-badge">S3</span>
+                            <span class="tech-badge">Terraform</span>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Installation Section -->
-    <section id="installation" class="py-20">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-white mb-4">🛠️ Quick Installation</h2>
-                <p class="text-xl text-slate-300 max-w-2xl mx-auto">
-                    Get up and running in minutes
-                </p>
-            </div>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- Local Installation -->
-                <div class="glassmorphism rounded-xl p-6">
-                    <h3 class="text-xl font-semibold text-white mb-4">
-                        <i data-lucide="terminal" class="w-5 h-5 inline mr-2"></i>
-                        Local Installation
-                    </h3>
-                    <div class="code-block">
-                        <div class="text-green-400"># Clone the repository</div>
-                        <div class="text-white">git clone https://github.com/zehroque21/datalake.git</div>
-                        <div class="text-white">cd datalake/docker/native</div>
-                        <br>
-                        <div class="text-green-400"># Install dependencies</div>
-                        <div class="text-white">pip install -r requirements.txt</div>
-                        <br>
-                        <div class="text-green-400"># Set environment variables</div>
-                        <div class="text-white">export OPENWEATHER_API_KEY="your_key"</div>
-                        <br>
-                        <div class="text-green-400"># Run the application</div>
-                        <div class="text-white">./start-native.sh</div>
-                    </div>
-                </div>
-
-                <!-- Docker Installation -->
-                <div class="glassmorphism rounded-xl p-6">
-                    <h3 class="text-xl font-semibold text-white mb-4">
-                        <i data-lucide="container" class="w-5 h-5 inline mr-2"></i>
-                        Docker Installation
-                    </h3>
-                    <div class="code-block">
-                        <div class="text-green-400"># Clone the repository</div>
-                        <div class="text-white">git clone https://github.com/zehroque21/datalake.git</div>
-                        <div class="text-white">cd datalake/docker/native</div>
-                        <br>
-                        <div class="text-green-400"># Build and run with Docker</div>
-                        <div class="text-white">docker-compose -f docker-compose-native.yml up -d</div>
-                        <br>
-                        <div class="text-green-400"># Access the dashboard</div>
-                        <div class="text-white">http://localhost:5420</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Dashboard Preview -->
-    <section class="py-20">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-white mb-4">📊 Dashboard Preview</h2>
-                <p class="text-xl text-slate-300 max-w-2xl mx-auto">
-                    Modern, responsive interface with real-time data
-                </p>
-            </div>
-            
-            <div class="glassmorphism rounded-xl p-8">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <!-- Analytics Tab -->
-                    <div class="bg-slate-800 rounded-lg p-6">
-                        <h3 class="text-lg font-semibold text-white mb-4">📈 Analytics Tab</h3>
-                        <ul class="space-y-2 text-slate-300">
-                            <li>• Metrics overview cards</li>
-                            <li>• Temperature trend visualization</li>
-                            <li>• Recent job executions</li>
-                            <li>• Real-time data updates</li>
-                        </ul>
+        <section id="features" class="section">
+            <div class="container">
+                <h2>Key Features</h2>
+                <p class="section-subtitle">Modern data platform with flexible deployment options</p>
+                
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <h3>File-Based Storage</h3>
+                        <p>Zero database dependencies with JSON file storage, S3-compatible and cloud-ready</p>
                     </div>
                     
-                    <!-- Jobs Tab -->
-                    <div class="bg-slate-800 rounded-lg p-6">
-                        <h3 class="text-lg font-semibold text-white mb-4">🔄 Jobs Tab</h3>
-                        <ul class="space-y-2 text-slate-300">
-                            <li>• Pipeline DAG visualization</li>
-                            <li>• Execution history table</li>
-                            <li>• Manual job triggers</li>
-                            <li>• Error handling & logs</li>
-                        </ul>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3>Real-Time Dashboard</h3>
+                        <p>Modern web interface with glassmorphism design, live metrics, and data visualization</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <h3>Job Orchestration</h3>
+                        <p>Built-in scheduler with execution tracking, error handling, and manual triggers</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-cloud"></i>
+                        </div>
+                        <h3>Weather Pipeline</h3>
+                        <p>Example data collection pipeline for meteorological data with OpenWeatherMap integration</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h3>Responsive Design</h3>
+                        <p>Mobile-friendly interface that works perfectly on desktop and mobile devices</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>Production Ready</h3>
+                        <p>Terraform infrastructure, GitHub Actions CI/CD, and comprehensive monitoring</p>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- CTA Section -->
-    <section class="py-20">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div class="glassmorphism rounded-xl p-12">
-                <h2 class="text-4xl font-bold text-white mb-4">Ready to Get Started?</h2>
-                <p class="text-xl text-slate-300 mb-8">
-                    Deploy your own DataLake Native instance in minutes
-                </p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="https://github.com/zehroque21/datalake" target="_blank"
-                       class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg text-lg font-medium transition-colors">
-                        <i data-lucide="github" class="w-5 h-5 inline mr-2"></i>
-                        View on GitHub
-                    </a>
-                    <a href="mailto:muja.dr21@gmail.com"
-                       class="glassmorphism hover:bg-white/20 text-white px-8 py-4 rounded-lg text-lg font-medium transition-colors">
-                        <i data-lucide="mail" class="w-5 h-5 inline mr-2"></i>
-                        Get Support
-                    </a>
+        <section id="architecture" class="section">
+            <div class="container">
+                <h2>Architecture Overview</h2>
+                <p class="section-subtitle">Simple, scalable, and production-ready architecture</p>
+                
+                <div class="architecture-diagram">
+                    <h3>Data Flow Pipeline</h3>
+                    <div class="flow-diagram">
+                        <div class="flow-step">
+                            <i class="fas fa-play"></i>
+                            <div>Trigger</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">
+                            <i class="fas fa-download"></i>
+                            <div>Collect</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">
+                            <i class="fas fa-check"></i>
+                            <div>Validate</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">
+                            <i class="fas fa-save"></i>
+                            <div>Store</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">
+                            <i class="fas fa-chart-bar"></i>
+                            <div>Monitor</div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </section>
 
-    <!-- Footer -->
-    <footer class="py-12 border-t border-slate-600">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row justify-between items-center">
-                <div class="flex items-center mb-4 md:mb-0">
-                    <span class="text-2xl font-bold text-white">🌊 DataLake Native</span>
-                    <span class="ml-3 text-slate-400">v2.0</span>
-                </div>
-                <div class="flex items-center space-x-6">
-                    <a href="https://github.com/zehroque21/datalake" target="_blank" 
-                       class="text-slate-400 hover:text-white transition-colors">
-                        <i data-lucide="github" class="w-5 h-5"></i>
-                    </a>
-                    <a href="mailto:muja.dr21@gmail.com" 
-                       class="text-slate-400 hover:text-white transition-colors">
-                        <i data-lucide="mail" class="w-5 h-5"></i>
-                    </a>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3>Storage Structure</h3>
+                        <p><strong>data/raw/weather/</strong> - Raw weather data (JSON)<br>
+                        <strong>data/processed/</strong> - Processed datasets<br>
+                        <strong>data/logs/</strong> - Job execution logs<br>
+                        <strong>data/metrics/</strong> - Calculated metrics</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <h3>Technology Stack</h3>
+                        <div class="tech-stack">
+                            <span class="tech-badge">Python 3.11+</span>
+                            <span class="tech-badge">Flask</span>
+                            <span class="tech-badge">Alpine.js</span>
+                            <span class="tech-badge">Chart.js</span>
+                            <span class="tech-badge">Tailwind CSS</span>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="mt-8 pt-8 border-t border-slate-700 text-center text-slate-400">
-                <p>&copy; 2024 DataLake Native. Built with ❤️ by Amado Roque. Licensed under MIT.</p>
+        </section>
+
+        <section id="deployment" class="section">
+            <div class="container">
+                <h2>Deployment Options</h2>
+                <p class="section-subtitle">Choose the right deployment for your needs</p>
+                
+                <div class="deployment-grid">
+                    <div class="deployment-option">
+                        <div class="deployment-icon">
+                            <i class="fab fa-docker"></i>
+                        </div>
+                        <h3>Docker Local</h3>
+                        <p><strong>Perfect for:</strong> Development, testing, demos</p>
+                        <p><strong>Setup:</strong> docker-compose up -d</p>
+                        <p><strong>Features:</strong> File-based storage, instant startup</p>
+                    </div>
+                    
+                    <div class="deployment-option">
+                        <div class="deployment-icon">
+                            <i class="fab fa-aws"></i>
+                        </div>
+                        <h3>AWS Production</h3>
+                        <p><strong>Perfect for:</strong> Production, scaling, enterprise</p>
+                        <p><strong>Setup:</strong> terraform apply</p>
+                        <p><strong>Features:</strong> EC2, S3, IAM, auto-scaling</p>
+                    </div>
+                </div>
             </div>
+        </section>
+
+        <section id="about" class="section">
+            <div class="container">
+                <div class="creator-section">
+                    <div class="creator-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="creator-name">Amado Roque</div>
+                    <div class="creator-role">Data Engineer & Cloud Architect</div>
+                    <div class="creator-bio">
+                        Passionate about building scalable data platforms and modern cloud architectures. 
+                        Focused on creating simple, effective solutions for complex data challenges.
+                    </div>
+                    <div class="creator-socials">
+                        <a href="https://github.com/zehroque21" class="social-link" target="_blank">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <a href="mailto:muja.dr21@gmail.com" class="social-link">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                        <a href="https://linkedin.com/in/amadoroque" class="social-link" target="_blank">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                    </div>
+                    <div class="tech-stack">
+                        <span class="tech-badge">Python</span>
+                        <span class="tech-badge">AWS</span>
+                        <span class="tech-badge">Terraform</span>
+                        <span class="tech-badge">Docker</span>
+                        <span class="tech-badge">Data Engineering</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 DataLake Native. Built with ❤️ by Amado Roque. Licensed under MIT.</p>
         </div>
     </footer>
-
-    <script>
-        // Initialize Lucide icons
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        }
-
-        // Smooth scrolling for anchor links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        });
-    </script>
 </body>
 </html>
 
