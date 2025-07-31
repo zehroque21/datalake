@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 DataLake Native - Versão Simples
 Flask App com Jobs Agendados e Dashboard
@@ -14,6 +13,7 @@ from apscheduler.triggers.interval import IntervalTrigger
 import pandas as pd
 import requests
 import json
+import random
 
 # Configuração de logging
 logging.basicConfig(level=logging.INFO)
@@ -28,21 +28,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Database
 db = SQLAlchemy(app)
 
-# Criar tabelas automaticamente quando o app inicializar
-@app.before_first_request
-def create_tables():
-    """Criar tabelas automaticamente na primeira requisição"""
-    try:
-        db.create_all()
-        logger.info("✅ Tabelas do banco criadas com sucesso")
-        
-        # Executar coleta inicial se não houver dados
-        if WeatherData.query.count() == 0:
-            collect_weather_data()
-            logger.info("🌡️ Coleta inicial de dados executada")
-            
-    except Exception as e:
-        logger.error(f"❌ Erro ao criar tabelas: {e}")
+# Scheduler
+scheduler = BackgroundScheduler()
 
 # Models
 class JobExecution(db.Model):
@@ -78,31 +65,34 @@ def collect_weather_data():
         status='running',
         start_time=start_time
     )
-    db.session.add(execution)
-    db.session.commit()
     
     try:
-        logger.info(f"🌡️ Iniciando coleta de dados meteorológicos...")
+        db.session.add(execution)
+        db.session.commit()
         
-        # API OpenWeatherMap (simulação - você pode usar sua API key)
-        # Por enquanto, vamos simular dados
-        import random
-        
-        # Simular dados realísticos para Campinas
+        # Simular coleta de dados (substitua por API real)
+        # Para demonstração, vamos gerar dados simulados realísticos para Campinas
         temperature = round(random.uniform(18, 32), 1)  # Temperatura típica de Campinas
-        humidity = round(random.uniform(40, 85), 1)
-        pressure = round(random.uniform(1010, 1025), 1)
+        humidity = round(random.uniform(45, 85), 1)      # Umidade típica
+        pressure = round(random.uniform(1010, 1025), 1)  # Pressão atmosférica
         
-        weather_data = WeatherData(
-            city='Campinas',
+        descriptions = [
+            "Ensolarado", "Parcialmente nublado", "Nublado", 
+            "Chuva leve", "Tempo limpo", "Neblina"
+        ]
+        description = random.choice(descriptions)
+        
+        # Salvar dados meteorológicos
+        weather = WeatherData(
+            city="Campinas",
             temperature=temperature,
             humidity=humidity,
             pressure=pressure,
-            description='Dados simulados',
+            description=description,
             job_execution_id=execution.id
         )
         
-        db.session.add(weather_data)
+        db.session.add(weather)
         
         # Finalizar job com sucesso
         end_time = datetime.utcnow()
@@ -124,11 +114,7 @@ def collect_weather_data():
         execution.error_message = str(e)
         
         db.session.commit()
-        
         logger.error(f"❌ Erro na coleta: {e}")
-
-# Scheduler
-scheduler = BackgroundScheduler()
 
 # Routes
 @app.route('/')
@@ -138,81 +124,100 @@ def dashboard():
 
 @app.route('/api/metrics')
 def get_metrics():
-    """API para métricas do dashboard"""
+    """API para métricas gerais"""
     try:
-        # Métricas básicas
-        total_jobs = JobExecution.query.count()
-        successful_jobs = JobExecution.query.filter_by(status='success').count()
-        failed_jobs = JobExecution.query.filter_by(status='error').count()
-        
-        # Jobs hoje
         today = datetime.utcnow().date()
+        
+        # Métricas do dia
         jobs_today = JobExecution.query.filter(
             db.func.date(JobExecution.created_at) == today
         ).count()
+        
+        successful_jobs = JobExecution.query.filter(
+            db.func.date(JobExecution.created_at) == today,
+            JobExecution.status == 'success'
+        ).count()
+        
+        failed_jobs = JobExecution.query.filter(
+            db.func.date(JobExecution.created_at) == today,
+            JobExecution.status == 'error'
+        ).count()
+        
+        total_jobs = JobExecution.query.count()
+        
+        # Taxa de sucesso
+        success_rate = (successful_jobs / jobs_today * 100) if jobs_today > 0 else 0
         
         # Última execução
         last_execution = JobExecution.query.order_by(
             JobExecution.created_at.desc()
         ).first()
         
-        # Taxa de sucesso
-        success_rate = (successful_jobs / total_jobs * 100) if total_jobs > 0 else 0
-        
         return jsonify({
-            'total_jobs': total_jobs,
+            'jobs_today': jobs_today,
             'successful_jobs': successful_jobs,
             'failed_jobs': failed_jobs,
-            'jobs_today': jobs_today,
+            'total_jobs': total_jobs,
             'success_rate': round(success_rate, 1),
             'last_execution': {
-                'job_name': last_execution.job_name if last_execution else None,
-                'status': last_execution.status if last_execution else None,
-                'timestamp': last_execution.created_at.isoformat() if last_execution else None
-            }
+                'status': last_execution.status,
+                'timestamp': last_execution.created_at.isoformat()
+            } if last_execution else None
         })
         
     except Exception as e:
         logger.error(f"Erro ao buscar métricas: {e}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({
+            'jobs_today': 0,
+            'successful_jobs': 0,
+            'failed_jobs': 0,
+            'total_jobs': 0,
+            'success_rate': 0,
+            'last_execution': None
+        })
 
 @app.route('/api/weather')
 def get_weather_data():
-    """API para dados de temperatura"""
+    """API para dados meteorológicos"""
     try:
-        # Últimas 24 horas de dados
-        since = datetime.utcnow() - timedelta(hours=24)
+        # Últimas 48 horas
+        since = datetime.utcnow() - timedelta(hours=48)
         
-        weather_records = WeatherData.query.filter(
+        weather_data = WeatherData.query.filter(
             WeatherData.timestamp >= since
         ).order_by(WeatherData.timestamp.desc()).limit(48).all()
         
         data = []
-        for record in reversed(weather_records):  # Ordem cronológica
+        for weather in weather_data:
             data.append({
-                'timestamp': record.timestamp.isoformat(),
-                'temperature': record.temperature,
-                'humidity': record.humidity,
-                'pressure': record.pressure
+                'id': weather.id,
+                'city': weather.city,
+                'temperature': weather.temperature,
+                'humidity': weather.humidity,
+                'pressure': weather.pressure,
+                'description': weather.description,
+                'timestamp': weather.timestamp.isoformat()
             })
         
         return jsonify(data)
         
     except Exception as e:
         logger.error(f"Erro ao buscar dados meteorológicos: {e}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify([])
 
 @app.route('/api/jobs')
-def get_job_executions():
-    """API para histórico de execuções"""
+def get_jobs():
+    """API para execuções de jobs"""
     try:
         page = request.args.get('page', 1, type=int)
-        per_page = request.args.get('per_page', 20, type=int)
+        per_page = 20
         
         executions = JobExecution.query.order_by(
             JobExecution.created_at.desc()
         ).paginate(
-            page=page, per_page=per_page, error_out=False
+            page=page, 
+            per_page=per_page, 
+            error_out=False
         )
         
         data = []
@@ -237,9 +242,14 @@ def get_job_executions():
         
     except Exception as e:
         logger.error(f"Erro ao buscar execuções: {e}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({
+            'executions': [],
+            'total': 0,
+            'pages': 0,
+            'current_page': 1
+        })
 
-@app.route('/api/jobs/trigger/<job_name>')
+@app.route('/api/jobs/trigger/<job_name>', methods=['POST'])
 def trigger_job(job_name):
     """Trigger manual de job"""
     try:
@@ -258,23 +268,30 @@ def init_app():
     """Inicializar aplicação"""
     with app.app_context():
         # Criar tabelas
-        db.create_all()
+        try:
+            db.create_all()
+            logger.info("✅ Tabelas do banco criadas com sucesso")
+            
+            # Executar coleta inicial se não houver dados
+            if WeatherData.query.count() == 0:
+                collect_weather_data()
+                logger.info("🌡️ Coleta inicial de dados executada")
+                
+        except Exception as e:
+            logger.error(f"❌ Erro ao criar tabelas: {e}")
         
         # Configurar scheduler
-        scheduler.add_job(
-            func=collect_weather_data,
-            trigger=IntervalTrigger(minutes=30),  # A cada 30 minutos
-            id='weather_collection',
-            name='Coleta de Dados Meteorológicos',
-            replace_existing=True
-        )
-        
-        # Executar uma coleta inicial
-        collect_weather_data()
-        
-        # Iniciar scheduler
         if not scheduler.running:
             scheduler.start()
+            
+        if not scheduler.get_job('weather_collection'):
+            scheduler.add_job(
+                func=collect_weather_data,
+                trigger=IntervalTrigger(minutes=30),  # A cada 30 minutos
+                id='weather_collection',
+                name='Coleta de Dados Meteorológicos',
+                replace_existing=True
+            )
         
         logger.info("🚀 DataLake Native iniciado com sucesso!")
         logger.info("📊 Dashboard: http://localhost:5000")
