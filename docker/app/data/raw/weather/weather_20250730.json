@@ -1,0 +1,12 @@
+[
+  {
+    "id": "weather_20250730_215813",
+    "city": "Campinas",
+    "temperature": 23.6,
+    "humidity": 84.1,
+    "pressure": 1017.0,
+    "description": "Nublado",
+    "timestamp": "2025-07-30T21:58:13.922881",
+    "job_execution_id": "weather_collection_20250730_215813"
+  }
+]
