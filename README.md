@@ -1,5 +1,5 @@
 # DataLake AWS - Modern Data Engineering Platform
-
+<!-- -->
 🌐 **[Visit the project page](https://zehroque21.github.io/datalake/)** for a complete overview of the solution.
 
 🔒 **[Security Policy](SECURITY.md)** - Read our comprehensive security guidelines.
