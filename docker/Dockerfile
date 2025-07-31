@@ -1,62 +1,37 @@
-# Prefect Data Orchestration Environment
 FROM python:3.11-slim
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV PREFECT_API_URL=http://localhost:4200/api
-
-# Install system dependencies including Java
+# Instalar dependências do sistema
 RUN apt-get update && apt-get install -y \
     curl \
-    git \
-    default-jdk \
-    procps \
     && rm -rf /var/lib/apt/lists/*
 
-# Set JAVA_HOME environment variable
-ENV JAVA_HOME=/usr/lib/jvm/default-java
-ENV PATH=$PATH:$JAVA_HOME/bin
+# Criar usuário não-root
+RUN useradd -m -u 1000 datalake
 
-# Create prefect user
-RUN useradd -m -s /bin/bash prefect
-
-# Set working directory
+# Definir diretório de trabalho
 WORKDIR /app
 
-# Install Python dependencies
-RUN pip install --no-cache-dir \
-    prefect==2.14.21 \
-    pandas==2.1.4 \
-    requests==2.31.0 \
-    pyspark==3.5.0 \
-    delta-spark==3.0.0 \
-    pyarrow==14.0.1 \
-    sqlalchemy==2.0.23 \
-    psycopg2-binary==2.9.9
+# Copiar requirements e instalar dependências Python
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Fix griffe version conflict (Prefect installs 1.8.0 but needs 0.38.1)
-RUN pip install --no-cache-dir griffe==0.38.1
+# Copiar aplicação
+COPY app/ ./
 
-# Copy flows from parent directory (using correct Docker build context)
-COPY flows/ /app/flows/
-COPY docker/prefect-entrypoint.sh /app/prefect-entrypoint.sh
-COPY docker/s3/ /app/s3/
+# Criar diretório para database
+RUN mkdir -p /app/data && chown -R datalake:datalake /app
 
-# Make scripts executable
-RUN chmod +x /app/prefect-entrypoint.sh
+# Mudar para usuário não-root
+USER datalake
 
+# Expor porta
+EXPOSE 5000
 
-# Corrige permissões para o diretório do UI do Prefect Server
-RUN mkdir -p /usr/local/lib/python3.11/site-packages/prefect/server/ui_build \
-    && chmod -R 777 /usr/local/lib/python3.11/site-packages/prefect/server/ui_build \
-    && chown -R prefect:prefect /app
+# Variáveis de ambiente
+ENV FLASK_APP=app.py
+ENV FLASK_ENV=production
+ENV PYTHONPATH=/app
 
-# Switch to prefect user
-USER prefect
-
-# Expose Prefect UI port
-EXPOSE 4200
-
-# Default command
-CMD ["/app/prefect-entrypoint.sh"]
+# Comando de inicialização
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--timeout", "120", "app:app"]
 

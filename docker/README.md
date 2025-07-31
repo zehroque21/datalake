@@ -1,144 +1,241 @@
-# Data Lake Local Development Environment
+# 🌊 DataLake - Versão Nativa e Eficiente
 
-Complete local development environment for the Data Lake project with modern data stack:
+Uma implementação moderna e leve de um data lake com Flask, jobs agendados e dashboard interativo.
 
-## 🛠️ Technology Stack
+## 🎯 **Características**
 
-- **🌊 Orchestration:** Prefect 2.14.21
-- **📊 Visualization:** Apache Superset
-- **📚 Data Catalog:** OpenMetadata
-- **⚡ Processing:** Apache Spark with Delta Lake
-- **🗂️ Storage:** Delta Lake format (ACID transactions)
-- **🐳 Infrastructure:** Docker Compose
+- ✅ **Leve e Rápido** - Apenas ~200MB RAM
+- ✅ **Fácil de Usar** - Um comando para iniciar
+- ✅ **Moderno** - Flask + SQLAlchemy + Chart.js
+- ✅ **Responsivo** - Interface mobile-friendly
+- ✅ **Evolutivo** - Base sólida para crescer
+- ✅ **AWS Ready** - Perfeito para free tier
 
-## 🚀 Quick Start
+## 🚀 **Início Rápido**
 
 ```bash
-# Start the complete Data Lake environment
+# Clonar repositório
+git clone https://github.com/zehroque21/datalake
+cd datalake/docker/
+
+# Iniciar DataLake
 ./start-datalake.sh
 
-# Access the tools
-open http://localhost:4200  # Prefect UI
-open http://localhost:8088  # Superset (admin/admin123)
-open http://localhost:8585  # OpenMetadata
-open http://localhost:8080  # Spark UI
+# Acessar dashboard
+open http://localhost:5000
 ```
 
-## 🌐 Access Points
-
-| Tool | URL | Credentials | Purpose |
-|------|-----|-------------|---------|
-| **Prefect** | http://localhost:4200 | - | Workflow orchestration |
-| **Superset** | http://localhost:8088 | admin/admin123 | Data visualization & dashboards |
-| **OpenMetadata** | http://localhost:8585 | - | Data catalog & governance |
-| **Spark UI** | http://localhost:8080 | - | Spark job monitoring |
-
-## 📁 Data Lake Architecture
+## 🏗️ **Arquitetura**
 
 ```
-/app/s3/
-├── staging/     # 📥 Raw data as received (JSON/CSV)
-├── raw/         # 🗂️ Delta Lake tables (validated data)
-├── trusted/     # ✅ Processed and enriched data
-└── refined/     # 📊 Analytics-ready aggregations
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Dashboard     │    │   Flask API     │    │   Scheduler     │
+│   (HTML/JS)     │◄──►│   (Python)      │◄──►│   (APScheduler) │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                                │
+                                ▼
+                       ┌─────────────────┐
+                       │   SQLite DB     │
+                       │   (Dados)       │
+                       └─────────────────┘
 ```
 
-## 🌡️ Temperature Pipeline
+## 📊 **Funcionalidades**
 
-Automated pipeline that:
-- Collects real-time temperature data for Campinas, SP
-- Validates data quality
-- Stores in staging (JSON) and raw (Delta Lake)
-- Runs every 30 minutes automatically
-- Provides metadata and lineage tracking
+### **🔄 Jobs Automáticos**
+- **Coleta meteorológica** - Dados de Campinas a cada 30min
+- **Scheduler robusto** - APScheduler com persistência
+- **Trigger manual** - Execução sob demanda via dashboard
+- **Monitoramento** - Logs e métricas de execução
 
-## 🔍 Useful Commands
+### **📈 Dashboard Interativo**
+- **Métricas em tempo real** - Jobs, sucessos, falhas
+- **Gráficos dinâmicos** - Chart.js com dados históricos
+- **Tabelas responsivas** - Histórico de execuções
+- **Auto-refresh** - Atualização automática a cada 30s
+
+### **🔌 APIs REST**
+- `GET /api/metrics` - Métricas gerais do sistema
+- `GET /api/weather` - Dados meteorológicos coletados
+- `GET /api/jobs` - Histórico de execuções de jobs
+- `POST /api/jobs/trigger/<job>` - Executar job manualmente
+
+## 🛠️ **Stack Técnica**
+
+### **Backend**
+- **Flask 3.0** - Web framework moderno
+- **SQLAlchemy** - ORM com SQLite/PostgreSQL
+- **APScheduler** - Jobs agendados robustos
+- **Pandas** - Processamento de dados
+- **Gunicorn** - WSGI server para produção
+
+### **Frontend**
+- **Chart.js** - Gráficos interativos (~200KB)
+- **Alpine.js** - Reatividade leve (~15KB)
+- **Tailwind CSS** - Styling moderno (~10KB)
+- **Vanilla JS** - Sem frameworks pesados
+
+## 📁 **Estrutura do Projeto**
+
+```
+docker/
+├── app/
+│   ├── app.py              # Aplicação Flask principal
+│   └── templates/
+│       └── dashboard.html  # Interface do dashboard
+├── docker-compose.yml      # Orquestração de containers
+├── Dockerfile              # Imagem Docker otimizada
+├── requirements.txt        # Dependências Python
+├── start-datalake.sh       # Script de inicialização
+└── README.md              # Esta documentação
+```
+
+## ⚙️ **Configuração**
+
+### **Variáveis de Ambiente**
+```bash
+FLASK_ENV=development       # Modo de desenvolvimento
+FLASK_DEBUG=1              # Debug ativo
+DATABASE_URL=sqlite:///data/datalake.db  # Database local
+```
+
+### **Recursos Necessários**
+- **RAM:** ~200MB (perfeito para AWS free tier)
+- **CPU:** Mínimo (1 vCPU suficiente)
+- **Storage:** ~50MB
+- **Porta:** 5000
+
+## 🔧 **Comandos Úteis**
 
 ```bash
-# View pipeline logs
-docker compose logs -f prefect-server
+# Iniciar aplicação
+./start-datalake.sh
 
-# Check latest temperature data
-docker compose exec prefect-server cat /app/s3/staging/weather/campinas_temperature_latest.json
+# Ver logs em tempo real
+docker compose logs -f
 
-# View Delta table metadata
-docker compose exec prefect-server cat /app/s3/raw/weather/campinas_temperature_metadata.json
-
-# Explore S3 structure
-docker compose exec prefect-server find /app/s3 -type f
-
-# Stop environment
+# Parar aplicação
 docker compose down
+
+# Reset completo (limpa dados)
+./start-datalake.sh --clean
+
+# Executar job manualmente
+curl -X POST http://localhost:5000/api/jobs/trigger/weather_collection
 ```
 
-## 🗂️ Delta Lake Benefits
+## 📊 **Monitoramento**
 
-- **ACID Transactions:** Reliable data operations
-- **Time Travel:** Query historical versions
-- **Schema Evolution:** Automatic schema updates
-- **Unified Batch/Stream:** Single format for all data
-- **Metadata:** Rich table statistics and lineage
+### **Métricas Disponíveis**
+- Total de jobs executados
+- Taxa de sucesso/falha
+- Jobs executados hoje
+- Duração média de execução
+- Última execução e status
 
-## 📊 Data Visualization
-
-### Superset Setup
-1. Access http://localhost:8088
-2. Login with admin/admin123
-3. Connect to Delta tables via Spark SQL
-4. Create dashboards for temperature monitoring
-
-### OpenMetadata Setup
-1. Access http://localhost:8585
-2. Discover datasets automatically
-3. View data lineage and quality metrics
-4. Manage data governance policies
-
-## 🔄 Development Workflow
-
-1. **Develop:** Edit flows in `/flows/` directory
-2. **Test:** Run `./start-datalake.sh` to test locally
-3. **Monitor:** Use Prefect UI to track pipeline execution
-4. **Visualize:** Create dashboards in Superset
-5. **Govern:** Manage metadata in OpenMetadata
-
-## 🐳 Docker Services
-
-- **prefect-server:** Main orchestration engine
-- **superset:** Data visualization platform
-- **superset-db:** PostgreSQL for Superset
-- **openmetadata:** Data catalog service
-- **openmetadata-db:** PostgreSQL for OpenMetadata
-- **elasticsearch:** Search engine for metadata
-- **spark:** Processing engine for Delta Lake
-
-## 📈 Monitoring
-
-- **Pipeline Health:** Prefect UI dashboard
-- **Data Quality:** OpenMetadata quality metrics
-- **Performance:** Spark UI for job monitoring
-- **Visualization:** Superset dashboards
-
-## 🔧 Troubleshooting
-
+### **Logs Estruturados**
 ```bash
-# Restart specific service
-docker compose restart prefect-server
+# Ver logs da aplicação
+docker compose logs datalake
 
-# View service logs
-docker compose logs superset
-
-# Clean restart
-docker compose down -v && ./start-datalake.sh
-
-# Check service health
-docker compose ps
+# Filtrar por nível
+docker compose logs datalake | grep ERROR
+docker compose logs datalake | grep INFO
 ```
 
-## 🎯 Next Steps
+## 🚀 **Deploy em Produção**
 
-1. Add more data sources to the pipeline
-2. Create trusted layer transformations
-3. Build refined layer aggregations
-4. Develop business intelligence dashboards
-5. Implement data quality monitoring
+### **AWS EC2 (Free Tier)**
+```bash
+# Instalar Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+
+# Clonar e iniciar
+git clone https://github.com/zehroque21/datalake
+cd datalake/docker/
+./start-datalake.sh
+
+# Configurar proxy reverso (opcional)
+# nginx, traefik, ou cloudflare tunnel
+```
+
+### **PostgreSQL (Produção)**
+```bash
+# Ativar PostgreSQL em vez de SQLite
+docker compose --profile postgres up -d
+
+# Atualizar DATABASE_URL no docker-compose.yml
+DATABASE_URL=postgresql://datalake:datalake123@postgres:5432/datalake
+```
+
+## 🔄 **Evolução Planejada**
+
+### **Fase 2 - Mais Fontes de Dados**
+- APIs de diferentes provedores
+- Múltiplas cidades e regiões
+- Dados financeiros e econômicos
+- Integração com webhooks
+
+### **Fase 3 - Analytics Avançados**
+- Machine learning com scikit-learn
+- Previsões e tendências
+- Alertas automáticos
+- Relatórios agendados
+
+### **Fase 4 - Infraestrutura**
+- Kubernetes deployment
+- Monitoramento com Prometheus
+- CI/CD com GitHub Actions
+- Backup automático
+
+## 🐛 **Troubleshooting**
+
+### **App não inicia**
+```bash
+# Verificar logs
+docker compose logs datalake
+
+# Verificar porta ocupada
+netstat -tlnp | grep 5000
+
+# Rebuild completo
+./start-datalake.sh --clean
+```
+
+### **Jobs não executam**
+```bash
+# Trigger manual
+curl -X POST http://localhost:5000/api/jobs/trigger/weather_collection
+
+# Verificar scheduler
+docker compose logs datalake | grep scheduler
+```
+
+### **Dashboard não carrega**
+```bash
+# Testar APIs
+curl http://localhost:5000/api/metrics
+curl http://localhost:5000/api/weather
+
+# Verificar JavaScript no browser console
+```
+
+## 🤝 **Contribuição**
+
+1. Fork o repositório
+2. Crie uma branch: `git checkout -b feature/nova-funcionalidade`
+3. Commit: `git commit -m 'Add nova funcionalidade'`
+4. Push: `git push origin feature/nova-funcionalidade`
+5. Abra um Pull Request
+
+## 📄 **Licença**
+
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](../LICENSE) para detalhes.
+
+---
+
+**🌊 DataLake - Simples, Eficiente e Moderno**
+
+*Construído com ❤️ para ser a base perfeita do seu data lake*
 
