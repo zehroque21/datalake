@@ -162,25 +162,48 @@ The application supports different storage backends:
 
 ## 🚀 Deployment
 
-### Production Deployment
+### Local Development (Docker)
 
-1. **Environment Setup**
+For local testing and development:
+
+```bash
+cd docker/native
+docker-compose -f docker-compose-native.yml up -d
+```
+
+### Production Deployment (AWS)
+
+For production deployment on AWS using Terraform:
+
+1. **Prerequisites**
    ```bash
-   export FLASK_ENV=production
-   export OPENWEATHER_API_KEY="your_production_key"
-   export DATA_DIR="/app/data"
+   # Install Terraform
+   terraform --version
+   
+   # Configure AWS credentials
+   aws configure
    ```
 
-2. **Run with Gunicorn**
+2. **Deploy Infrastructure**
    ```bash
-   gunicorn -w 4 -b 0.0.0.0:5420 app:app
+   cd terraform/
+   terraform init
+   terraform plan
+   terraform apply
    ```
 
-### Cloud Deployment
+3. **Infrastructure Components**
+   - **EC2 Instance** - Prefect server with auto-scaling
+   - **S3 Bucket** - Data lake storage
+   - **IAM Roles** - Secure access management
+   - **Security Groups** - Network security
+   - **GitHub Actions** - CI/CD pipeline
 
-The application is designed to be cloud-native and can be deployed on:
+### Cloud Deployment Options
 
-- **AWS** - EC2, ECS, Lambda
+The application supports multiple cloud platforms:
+
+- **AWS** - EC2, ECS, Lambda (Terraform included)
 - **Google Cloud** - Compute Engine, Cloud Run
 - **Azure** - Container Instances, App Service
 - **Heroku** - Direct deployment support

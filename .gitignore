@@ -94,9 +94,6 @@ node_modules/
 .yarn-integrity
 
 # Legacy files (removed)
-terraform/
-flows/
-.github/
 docker/docker-compose.yml
 docker/Dockerfile
 docker/prefect-entrypoint.sh
