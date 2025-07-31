@@ -31,6 +31,34 @@ db = SQLAlchemy(app)
 # Scheduler
 scheduler = BackgroundScheduler()
 
+# Inicialização automática para Gunicorn
+with app.app_context():
+    try:
+        db.create_all()
+        logger.info("✅ Tabelas do banco criadas com sucesso")
+        
+        # Iniciar scheduler se não estiver rodando
+        if not scheduler.running:
+            scheduler.start()
+            
+        # Adicionar job se não existir
+        if not scheduler.get_job('weather_collection'):
+            scheduler.add_job(
+                func=lambda: collect_weather_data(),
+                trigger=IntervalTrigger(minutes=30),
+                id='weather_collection',
+                name='Coleta de Dados Meteorológicos',
+                replace_existing=True
+            )
+            
+        # Executar coleta inicial se não houver dados
+        if WeatherData.query.count() == 0:
+            collect_weather_data()
+            logger.info("🌡️ Coleta inicial de dados executada")
+            
+    except Exception as e:
+        logger.error(f"❌ Erro na inicialização: {e}")
+
 # Models
 class JobExecution(db.Model):
     id = db.Column(db.Integer, primary_key=True)
