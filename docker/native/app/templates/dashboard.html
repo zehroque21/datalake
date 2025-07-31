@@ -208,7 +208,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-600">
-                            <template x-for="execution in jobExecutions.slice(0, 10)" :key="execution.id">
+                            <template x-for="(execution, index) in jobExecutions.slice(0, 10)" :key="execution.id + '_' + index">
                                 <tr class="hover:bg-slate-700/50">
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-white" x-text="execution.job_name"></td>
                                     <td class="px-6 py-4 whitespace-nowrap">
@@ -219,6 +219,9 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300" x-text="formatDateTime(execution.start_time)"></td>
                                 </tr>
                             </template>
+                            <tr x-show="!jobExecutions || jobExecutions.length === 0">
+                                <td colspan="5" class="px-6 py-4 text-center text-slate-400">No executions found</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -315,7 +318,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-600">
-                            <template x-for="execution in jobExecutions.slice(0, 20)" :key="execution.id">
+                            <template x-for="(execution, index) in jobExecutions.slice(0, 20)" :key="execution.id + '_jobs_' + index">
                                 <tr class="hover:bg-slate-700/50">
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-white" x-text="execution.job_name"></td>
                                     <td class="px-6 py-4 whitespace-nowrap">
@@ -330,9 +333,13 @@
                                                 class="text-red-400 hover:text-red-300">
                                             View Error
                                         </button>
+                                        <span x-show="!execution.error_message" class="text-slate-500">-</span>
                                     </td>
                                 </tr>
                             </template>
+                            <tr x-show="!jobExecutions || jobExecutions.length === 0">
+                                <td colspan="6" class="px-6 py-4 text-center text-slate-400">No executions found</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -349,61 +356,107 @@
                 jobExecutions: [],
                 lastTemperature: null,
                 temperatureChart: null,
+                isLoading: false,
 
                 async init() {
                     try {
+                        console.log('🚀 Initializing dashboard...');
                         await this.loadData();
-                        this.initCharts();
+                        await this.initCharts();
                         
                         // Auto-refresh every 30 seconds
-                        setInterval(() => this.refreshData(), 30000);
+                        setInterval(() => {
+                            if (!this.isLoading) {
+                                this.refreshData();
+                            }
+                        }, 30000);
                         
                         // Initialize Lucide icons
                         if (typeof lucide !== 'undefined') {
                             lucide.createIcons();
                         }
+                        
+                        console.log('✅ Dashboard initialized successfully');
                     } catch (error) {
-                        console.error('Error loading data:', error);
+                        console.error('❌ Error initializing dashboard:', error);
                     }
                 },
 
                 async loadData() {
+                    if (this.isLoading) return;
+                    
                     try {
+                        this.isLoading = true;
+                        console.log('📊 Loading data...');
+
                         // Load metrics
-                        const metricsResponse = await fetch('/api/metrics');
-                        if (metricsResponse.ok) {
-                            this.metrics = await metricsResponse.json();
+                        try {
+                            const metricsResponse = await fetch('/api/metrics');
+                            if (metricsResponse.ok) {
+                                this.metrics = await metricsResponse.json();
+                                console.log('✅ Metrics loaded:', this.metrics);
+                            } else {
+                                console.warn('⚠️ Failed to load metrics:', metricsResponse.status);
+                                this.metrics = {};
+                            }
+                        } catch (error) {
+                            console.error('❌ Error loading metrics:', error);
+                            this.metrics = {};
                         }
 
                         // Load weather data
-                        const weatherResponse = await fetch('/api/weather');
-                        if (weatherResponse.ok) {
-                            this.weatherData = await weatherResponse.json();
-                            
-                            if (this.weatherData.length > 0) {
-                                this.lastTemperature = this.weatherData[this.weatherData.length - 1].temperature;
+                        try {
+                            const weatherResponse = await fetch('/api/weather');
+                            if (weatherResponse.ok) {
+                                this.weatherData = await weatherResponse.json();
+                                console.log('✅ Weather data loaded:', this.weatherData.length, 'records');
+                                
+                                if (this.weatherData.length > 0) {
+                                    this.lastTemperature = this.weatherData[this.weatherData.length - 1].temperature;
+                                }
+                            } else {
+                                console.warn('⚠️ Failed to load weather data:', weatherResponse.status);
+                                this.weatherData = [];
                             }
+                        } catch (error) {
+                            console.error('❌ Error loading weather data:', error);
+                            this.weatherData = [];
                         }
 
                         // Load job executions
-                        const jobsResponse = await fetch('/api/jobs');
-                        if (jobsResponse.ok) {
-                            const jobsData = await jobsResponse.json();
-                            this.jobExecutions = jobsData.executions || [];
+                        try {
+                            const jobsResponse = await fetch('/api/jobs');
+                            if (jobsResponse.ok) {
+                                const jobsData = await jobsResponse.json();
+                                this.jobExecutions = jobsData.executions || [];
+                                console.log('✅ Job executions loaded:', this.jobExecutions.length, 'records');
+                            } else {
+                                console.warn('⚠️ Failed to load job executions:', jobsResponse.status);
+                                this.jobExecutions = [];
+                            }
+                        } catch (error) {
+                            console.error('❌ Error loading job executions:', error);
+                            this.jobExecutions = [];
                         }
 
+                        // Update charts after loading data
                         this.updateCharts();
+                        
                     } catch (error) {
-                        console.error('Error loading data:', error);
+                        console.error('❌ Error loading data:', error);
+                    } finally {
+                        this.isLoading = false;
                     }
                 },
 
                 async refreshData() {
+                    console.log('🔄 Refreshing data...');
                     await this.loadData();
                 },
 
                 async triggerJob(jobName) {
                     try {
+                        console.log('▶️ Triggering job:', jobName);
                         const response = await fetch(`/api/jobs/trigger/${jobName}`, {
                             method: 'POST'
                         });
@@ -411,99 +464,122 @@
                         
                         if (response.ok) {
                             alert('Job executed successfully!');
+                            console.log('✅ Job triggered successfully');
                             setTimeout(() => this.refreshData(), 2000);
                         } else {
                             alert('Error: ' + result.error);
+                            console.error('❌ Job trigger failed:', result.error);
                         }
                     } catch (error) {
                         alert('Error executing job: ' + error.message);
+                        console.error('❌ Error triggering job:', error);
                     }
                 },
 
-                initCharts() {
-                    const ctx = document.getElementById('temperatureChart');
-                    if (!ctx) return;
-                    
-                    this.temperatureChart = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: [],
-                            datasets: [{
-                                label: 'Temperature (°C)',
-                                data: [],
-                                borderColor: '#3b82f6',
-                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                                tension: 0.4,
-                                fill: true,
-                                pointBackgroundColor: '#3b82f6',
-                                pointBorderColor: '#ffffff',
-                                pointBorderWidth: 2,
-                                pointRadius: 4
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            interaction: {
-                                intersect: false,
-                                mode: 'index'
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: false,
-                                    title: {
-                                        display: true,
-                                        text: 'Temperature (°C)',
-                                        color: '#cbd5e1'
-                                    },
-                                    ticks: {
-                                        color: '#cbd5e1'
-                                    },
-                                    grid: {
-                                        color: 'rgba(203, 213, 225, 0.1)'
-                                    }
-                                },
-                                x: {
-                                    title: {
-                                        display: true,
-                                        text: 'Time',
-                                        color: '#cbd5e1'
-                                    },
-                                    ticks: {
-                                        color: '#cbd5e1'
-                                    },
-                                    grid: {
-                                        color: 'rgba(203, 213, 225, 0.1)'
-                                    }
-                                }
-                            },
-                            plugins: {
-                                legend: {
-                                    display: false
-                                },
-                                tooltip: {
-                                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                                    titleColor: '#ffffff',
-                                    bodyColor: '#cbd5e1',
+                async initCharts() {
+                    try {
+                        const ctx = document.getElementById('temperatureChart');
+                        if (!ctx) {
+                            console.warn('⚠️ Temperature chart canvas not found');
+                            return;
+                        }
+                        
+                        // Destroy existing chart if it exists
+                        if (this.temperatureChart) {
+                            this.temperatureChart.destroy();
+                        }
+                        
+                        this.temperatureChart = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: [],
+                                datasets: [{
+                                    label: 'Temperature (°C)',
+                                    data: [],
                                     borderColor: '#3b82f6',
-                                    borderWidth: 1
+                                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                    tension: 0.4,
+                                    fill: true,
+                                    pointBackgroundColor: '#3b82f6',
+                                    pointBorderColor: '#ffffff',
+                                    pointBorderWidth: 2,
+                                    pointRadius: 4
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                interaction: {
+                                    intersect: false,
+                                    mode: 'index'
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: false,
+                                        title: {
+                                            display: true,
+                                            text: 'Temperature (°C)',
+                                            color: '#cbd5e1'
+                                        },
+                                        ticks: {
+                                            color: '#cbd5e1'
+                                        },
+                                        grid: {
+                                            color: 'rgba(203, 213, 225, 0.1)'
+                                        }
+                                    },
+                                    x: {
+                                        title: {
+                                            display: true,
+                                            text: 'Time',
+                                            color: '#cbd5e1'
+                                        },
+                                        ticks: {
+                                            color: '#cbd5e1'
+                                        },
+                                        grid: {
+                                            color: 'rgba(203, 213, 225, 0.1)'
+                                        }
+                                    }
+                                },
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    },
+                                    tooltip: {
+                                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                                        titleColor: '#ffffff',
+                                        bodyColor: '#cbd5e1',
+                                        borderColor: '#3b82f6',
+                                        borderWidth: 1
+                                    }
                                 }
                             }
-                        }
-                    });
+                        });
+                        
+                        console.log('✅ Chart initialized successfully');
+                    } catch (error) {
+                        console.error('❌ Error initializing chart:', error);
+                    }
                 },
 
                 updateCharts() {
-                    if (this.temperatureChart && this.weatherData.length > 0) {
-                        const labels = this.weatherData.map(d => {
-                            const date = new Date(d.timestamp);
-                            return date.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
-                        });
-                        const temperatures = this.weatherData.map(d => d.temperature);
+                    try {
+                        if (this.temperatureChart && this.weatherData && this.weatherData.length > 0) {
+                            const labels = this.weatherData.map(d => {
+                                const date = new Date(d.timestamp);
+                                return date.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+                            });
+                            const temperatures = this.weatherData.map(d => d.temperature);
 
-                        this.temperatureChart.data.labels = labels;
-                        this.temperatureChart.data.datasets[0].data = temperatures;
-                        this.temperatureChart.update('none');
+                            this.temperatureChart.data.labels = labels;
+                            this.temperatureChart.data.datasets[0].data = temperatures;
+                            this.temperatureChart.update('none');
+                            
+                            console.log('✅ Chart updated with', temperatures.length, 'data points');
+                        }
+                    } catch (error) {
+                        console.error('❌ Error updating charts:', error);
                     }
                 },
 
@@ -515,13 +591,21 @@
 
                 formatDateTime(dateString) {
                     if (!dateString) return 'N/A';
-                    const date = new Date(dateString);
-                    return date.toLocaleString('pt-BR');
+                    try {
+                        const date = new Date(dateString);
+                        return date.toLocaleString('pt-BR');
+                    } catch (error) {
+                        return 'Invalid Date';
+                    }
                 },
 
                 formatDuration(seconds) {
-                    if (!seconds) return 'N/A';
-                    return seconds < 60 ? `${seconds.toFixed(1)}s` : `${(seconds/60).toFixed(1)}min`;
+                    if (!seconds && seconds !== 0) return 'N/A';
+                    try {
+                        return seconds < 60 ? `${seconds.toFixed(3)}s` : `${(seconds/60).toFixed(1)}min`;
+                    } catch (error) {
+                        return 'N/A';
+                    }
                 }
             }
         }
