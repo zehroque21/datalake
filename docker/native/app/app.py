@@ -1,113 +1,200 @@
-#!/usr/bin/env python3
 """
-DataLake Native - Versão Simples
+DataLake Native - Versão Baseada em Arquivos
 Flask App com Jobs Agendados e Dashboard
+Armazenamento: JSON files (S3-ready)
 """
 
 import os
+import json
 import logging
 from datetime import datetime, timedelta
 from flask import Flask, render_template, jsonify, request
-from flask_sqlalchemy import SQLAlchemy
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 import pandas as pd
 import requests
-import json
+import uuid
+from pathlib import Path
 
 # Configuração de logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Configuração de storage
+STORAGE_TYPE = os.getenv('STORAGE_TYPE', 'local')  # local ou s3
+DATA_DIR = Path(os.getenv('DATA_DIR', './data'))  # Usar ./data por padrão
+
 # Inicialização Flask
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'datalake-native-dev'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///datalake.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Database
-db = SQLAlchemy(app)
+# Funções de Storage
+def ensure_data_structure():
+    """Criar estrutura de pastas para dados"""
+    folders = [
+        DATA_DIR / 'raw' / 'weather',
+        DATA_DIR / 'processed',
+        DATA_DIR / 'logs',
+        DATA_DIR / 'metrics'
+    ]
+    
+    for folder in folders:
+        folder.mkdir(parents=True, exist_ok=True)
+    
+    logger.info(f"📁 Estrutura de dados criada em {DATA_DIR}")
 
-# Models
-class JobExecution(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    job_name = db.Column(db.String(100), nullable=False)
-    status = db.Column(db.String(20), nullable=False)  # success, error, running
-    start_time = db.Column(db.DateTime, nullable=False)
-    end_time = db.Column(db.DateTime)
-    duration_seconds = db.Column(db.Float)
-    records_processed = db.Column(db.Integer, default=0)
-    error_message = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+def save_job_execution(execution_data):
+    """Salvar execução de job em arquivo JSON"""
+    today = datetime.now().strftime('%Y%m%d')
+    file_path = DATA_DIR / 'logs' / f'jobs_{today}.json'
+    
+    # Carregar execuções existentes
+    executions = []
+    if file_path.exists():
+        with open(file_path, 'r') as f:
+            executions = json.load(f)
+    
+    # Adicionar nova execução
+    executions.append(execution_data)
+    
+    # Salvar arquivo
+    with open(file_path, 'w') as f:
+        json.dump(executions, f, indent=2, default=str)
 
-class WeatherData(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    city = db.Column(db.String(100), nullable=False)
-    temperature = db.Column(db.Float)
-    humidity = db.Column(db.Float)
-    pressure = db.Column(db.Float)
-    description = db.Column(db.String(200))
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    job_execution_id = db.Column(db.Integer, db.ForeignKey('job_execution.id'))
+def save_weather_data(weather_data):
+    """Salvar dados meteorológicos em arquivo JSON"""
+    today = datetime.now().strftime('%Y%m%d')
+    file_path = DATA_DIR / 'raw' / 'weather' / f'weather_{today}.json'
+    
+    # Carregar dados existentes
+    data = []
+    if file_path.exists():
+        with open(file_path, 'r') as f:
+            data = json.load(f)
+    
+    # Adicionar novos dados
+    data.append(weather_data)
+    
+    # Salvar arquivo
+    with open(file_path, 'w') as f:
+        json.dump(data, f, indent=2, default=str)
+
+def load_job_executions(days=7):
+    """Carregar execuções dos últimos N dias"""
+    executions = []
+    
+    for i in range(days):
+        date = (datetime.now() - timedelta(days=i)).strftime('%Y%m%d')
+        file_path = DATA_DIR / 'logs' / f'jobs_{date}.json'
+        
+        if file_path.exists():
+            with open(file_path, 'r') as f:
+                daily_executions = json.load(f)
+                executions.extend(daily_executions)
+    
+    # Ordenar por timestamp (mais recente primeiro)
+    executions.sort(key=lambda x: x['start_time'], reverse=True)
+    return executions
+
+def load_weather_data(hours=24):
+    """Carregar dados meteorológicos das últimas N horas"""
+    data = []
+    
+    # Verificar últimos 2 dias para cobrir 24h
+    for i in range(2):
+        date = (datetime.now() - timedelta(days=i)).strftime('%Y%m%d')
+        file_path = DATA_DIR / 'raw' / 'weather' / f'weather_{date}.json'
+        
+        if file_path.exists():
+            with open(file_path, 'r') as f:
+                daily_data = json.load(f)
+                data.extend(daily_data)
+    
+    # Filtrar últimas N horas
+    cutoff = datetime.now() - timedelta(hours=hours)
+    filtered_data = []
+    
+    for record in data:
+        record_time = datetime.fromisoformat(record['timestamp'].replace('Z', '+00:00'))
+        if record_time >= cutoff:
+            filtered_data.append(record)
+    
+    # Ordenar por timestamp
+    filtered_data.sort(key=lambda x: x['timestamp'])
+    return filtered_data
 
 # Jobs
 def collect_weather_data():
     """Job para coletar dados de temperatura de Campinas"""
+    job_id = str(uuid.uuid4())
     job_name = "weather_collection"
-    start_time = datetime.utcnow()
+    start_time = datetime.now()
     
-    # Registrar início do job
-    execution = JobExecution(
-        job_name=job_name,
-        status='running',
-        start_time=start_time
-    )
-    db.session.add(execution)
-    db.session.commit()
+    execution_data = {
+        'id': job_id,
+        'job_name': job_name,
+        'status': 'running',
+        'start_time': start_time.isoformat(),
+        'end_time': None,
+        'duration_seconds': None,
+        'records_processed': 0,
+        'error_message': None
+    }
     
     try:
         logger.info(f"🌡️ Iniciando coleta de dados meteorológicos...")
         
-        # API OpenWeatherMap (simulação - você pode usar sua API key)
-        # Por enquanto, vamos simular dados
+        # Simular dados realísticos para Campinas
         import random
         
-        # Simular dados realísticos para Campinas
         temperature = round(random.uniform(18, 32), 1)  # Temperatura típica de Campinas
         humidity = round(random.uniform(40, 85), 1)
         pressure = round(random.uniform(1010, 1025), 1)
         
-        weather_data = WeatherData(
-            city='Campinas',
-            temperature=temperature,
-            humidity=humidity,
-            pressure=pressure,
-            description='Dados simulados',
-            job_execution_id=execution.id
-        )
+        # Condições climáticas aleatórias
+        conditions = ['Ensolarado', 'Nublado', 'Parcialmente nublado', 'Chuvoso', 'Garoa']
+        description = random.choice(conditions)
         
-        db.session.add(weather_data)
+        weather_data = {
+            'id': str(uuid.uuid4()),
+            'city': 'Campinas',
+            'temperature': temperature,
+            'humidity': humidity,
+            'pressure': pressure,
+            'description': description,
+            'timestamp': datetime.now().isoformat(),
+            'job_execution_id': job_id
+        }
+        
+        # Salvar dados meteorológicos
+        save_weather_data(weather_data)
         
         # Finalizar job com sucesso
-        end_time = datetime.utcnow()
-        execution.status = 'success'
-        execution.end_time = end_time
-        execution.duration_seconds = (end_time - start_time).total_seconds()
-        execution.records_processed = 1
+        end_time = datetime.now()
+        execution_data.update({
+            'status': 'success',
+            'end_time': end_time.isoformat(),
+            'duration_seconds': (end_time - start_time).total_seconds(),
+            'records_processed': 1
+        })
         
-        db.session.commit()
+        # Salvar execução
+        save_job_execution(execution_data)
         
-        logger.info(f"✅ Dados coletados: {temperature}°C, {humidity}% umidade")
+        logger.info(f"✅ Dados coletados: {temperature}°C, {humidity}% umidade, {description}")
         
     except Exception as e:
         # Registrar erro
-        end_time = datetime.utcnow()
-        execution.status = 'error'
-        execution.end_time = end_time
-        execution.duration_seconds = (end_time - start_time).total_seconds()
-        execution.error_message = str(e)
+        end_time = datetime.now()
+        execution_data.update({
+            'status': 'error',
+            'end_time': end_time.isoformat(),
+            'duration_seconds': (end_time - start_time).total_seconds(),
+            'error_message': str(e)
+        })
         
-        db.session.commit()
+        # Salvar execução com erro
+        save_job_execution(execution_data)
         
         logger.error(f"❌ Erro na coleta: {e}")
 
@@ -124,21 +211,23 @@ def dashboard():
 def get_metrics():
     """API para métricas do dashboard"""
     try:
-        # Métricas básicas
-        total_jobs = JobExecution.query.count()
-        successful_jobs = JobExecution.query.filter_by(status='success').count()
-        failed_jobs = JobExecution.query.filter_by(status='error').count()
+        # Carregar execuções
+        executions = load_job_executions(days=30)
+        
+        # Calcular métricas
+        total_jobs = len(executions)
+        successful_jobs = len([e for e in executions if e['status'] == 'success'])
+        failed_jobs = len([e for e in executions if e['status'] == 'error'])
         
         # Jobs hoje
-        today = datetime.utcnow().date()
-        jobs_today = JobExecution.query.filter(
-            db.func.date(JobExecution.created_at) == today
-        ).count()
+        today = datetime.now().date()
+        jobs_today = len([
+            e for e in executions 
+            if datetime.fromisoformat(e['start_time']).date() == today
+        ])
         
         # Última execução
-        last_execution = JobExecution.query.order_by(
-            JobExecution.created_at.desc()
-        ).first()
+        last_execution = executions[0] if executions else None
         
         # Taxa de sucesso
         success_rate = (successful_jobs / total_jobs * 100) if total_jobs > 0 else 0
@@ -149,11 +238,7 @@ def get_metrics():
             'failed_jobs': failed_jobs,
             'jobs_today': jobs_today,
             'success_rate': round(success_rate, 1),
-            'last_execution': {
-                'job_name': last_execution.job_name if last_execution else None,
-                'status': last_execution.status if last_execution else None,
-                'timestamp': last_execution.created_at.isoformat() if last_execution else None
-            }
+            'last_execution': last_execution
         })
         
     except Exception as e:
@@ -164,21 +249,8 @@ def get_metrics():
 def get_weather_data():
     """API para dados de temperatura"""
     try:
-        # Últimas 24 horas de dados
-        since = datetime.utcnow() - timedelta(hours=24)
-        
-        weather_records = WeatherData.query.filter(
-            WeatherData.timestamp >= since
-        ).order_by(WeatherData.timestamp.desc()).limit(48).all()
-        
-        data = []
-        for record in reversed(weather_records):  # Ordem cronológica
-            data.append({
-                'timestamp': record.timestamp.isoformat(),
-                'temperature': record.temperature,
-                'humidity': record.humidity,
-                'pressure': record.pressure
-            })
+        hours = request.args.get('hours', 24, type=int)
+        data = load_weather_data(hours=hours)
         
         return jsonify(data)
         
@@ -193,29 +265,21 @@ def get_job_executions():
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 20, type=int)
         
-        executions = JobExecution.query.order_by(
-            JobExecution.created_at.desc()
-        ).paginate(
-            page=page, per_page=per_page, error_out=False
-        )
+        # Carregar todas as execuções
+        all_executions = load_job_executions(days=30)
         
-        data = []
-        for execution in executions.items:
-            data.append({
-                'id': execution.id,
-                'job_name': execution.job_name,
-                'status': execution.status,
-                'start_time': execution.start_time.isoformat(),
-                'end_time': execution.end_time.isoformat() if execution.end_time else None,
-                'duration_seconds': execution.duration_seconds,
-                'records_processed': execution.records_processed,
-                'error_message': execution.error_message
-            })
+        # Paginação manual
+        start_idx = (page - 1) * per_page
+        end_idx = start_idx + per_page
+        executions = all_executions[start_idx:end_idx]
+        
+        total = len(all_executions)
+        pages = (total + per_page - 1) // per_page
         
         return jsonify({
-            'executions': data,
-            'total': executions.total,
-            'pages': executions.pages,
+            'executions': executions,
+            'total': total,
+            'pages': pages,
             'current_page': page
         })
         
@@ -223,7 +287,7 @@ def get_job_executions():
         logger.error(f"Erro ao buscar execuções: {e}")
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/jobs/trigger/<job_name>')
+@app.route('/api/jobs/trigger/<job_name>', methods=['POST'])
 def trigger_job(job_name):
     """Trigger manual de job"""
     try:
@@ -240,29 +304,32 @@ def trigger_job(job_name):
 # Inicialização
 def init_app():
     """Inicializar aplicação"""
-    with app.app_context():
-        # Criar tabelas
-        db.create_all()
-        
-        # Configurar scheduler
-        scheduler.add_job(
-            func=collect_weather_data,
-            trigger=IntervalTrigger(minutes=30),  # A cada 30 minutos
-            id='weather_collection',
-            name='Coleta de Dados Meteorológicos',
-            replace_existing=True
-        )
-        
-        # Executar uma coleta inicial
+    # Criar estrutura de dados
+    ensure_data_structure()
+    
+    # Configurar scheduler
+    scheduler.add_job(
+        func=collect_weather_data,
+        trigger=IntervalTrigger(minutes=30),  # A cada 30 minutos
+        id='weather_collection',
+        name='Coleta de Dados Meteorológicos',
+        replace_existing=True
+    )
+    
+    # Executar uma coleta inicial se não houver dados
+    weather_data = load_weather_data(hours=1)
+    if not weather_data:
+        logger.info("🔄 Executando coleta inicial...")
         collect_weather_data()
-        
-        # Iniciar scheduler
-        if not scheduler.running:
-            scheduler.start()
-        
-        logger.info("🚀 DataLake Native iniciado com sucesso!")
-        logger.info("📊 Dashboard: http://localhost:5000")
-        logger.info("🔄 Job agendado: coleta a cada 30 minutos")
+    
+    # Iniciar scheduler
+    if not scheduler.running:
+        scheduler.start()
+    
+    logger.info("🚀 DataLake Native iniciado com sucesso!")
+    logger.info("📊 Dashboard: http://localhost:5420")
+    logger.info("🔄 Job agendado: coleta a cada 30 minutos")
+    logger.info(f"📁 Dados salvos em: {DATA_DIR}")
 
 if __name__ == '__main__':
     init_app()

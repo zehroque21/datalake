@@ -1,0 +1,8 @@
+# Data directory structure
+# This file ensures the data directory structure is preserved in git
+
+raw/weather/    - Raw weather data files (JSON)
+processed/      - Processed data files
+logs/          - Job execution logs
+metrics/       - Calculated metrics
+

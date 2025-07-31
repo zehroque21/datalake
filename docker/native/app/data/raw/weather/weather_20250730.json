@@ -1,0 +1,12 @@
+[
+  {
+    "id": "aeb85afe-f375-4cc1-8ca2-8d286ee5c990",
+    "city": "Campinas",
+    "temperature": 25.2,
+    "humidity": 83.9,
+    "pressure": 1012.8,
+    "description": "Parcialmente nublado",
+    "timestamp": "2025-07-30T22:32:03.342037",
+    "job_execution_id": "88c63d65-76dd-4586-a9b7-ca6018aea6c9"
+  }
+]
