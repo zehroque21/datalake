@@ -22,7 +22,7 @@ cd datalake/docker/
 ./start-datalake.sh
 
 # Acessar dashboard
-open http://localhost:5000
+open http://localhost:5420
 ```
 
 ## 🏗️ **Arquitetura**
@@ -103,7 +103,7 @@ DATABASE_URL=sqlite:///data/datalake.db  # Database local
 - **RAM:** ~200MB (perfeito para AWS free tier)
 - **CPU:** Mínimo (1 vCPU suficiente)
 - **Storage:** ~50MB
-- **Porta:** 5000
+- **Porta:** 5420
 
 ## 🔧 **Comandos Úteis**
 
@@ -121,7 +121,7 @@ docker compose down
 ./start-datalake.sh --clean
 
 # Executar job manualmente
-curl -X POST http://localhost:5000/api/jobs/trigger/weather_collection
+curl -X POST http://localhost:5420/api/jobs/trigger/weather_collection
 ```
 
 ## 📊 **Monitoramento**
@@ -197,7 +197,7 @@ DATABASE_URL=postgresql://datalake:datalake123@postgres:5432/datalake
 docker compose logs datalake
 
 # Verificar porta ocupada
-netstat -tlnp | grep 5000
+netstat -tlnp | grep 5420
 
 # Rebuild completo
 ./start-datalake.sh --clean
@@ -206,7 +206,7 @@ netstat -tlnp | grep 5000
 ### **Jobs não executam**
 ```bash
 # Trigger manual
-curl -X POST http://localhost:5000/api/jobs/trigger/weather_collection
+curl -X POST http://localhost:5420/api/jobs/trigger/weather_collection
 
 # Verificar scheduler
 docker compose logs datalake | grep scheduler
@@ -215,8 +215,8 @@ docker compose logs datalake | grep scheduler
 ### **Dashboard não carrega**
 ```bash
 # Testar APIs
-curl http://localhost:5000/api/metrics
-curl http://localhost:5000/api/weather
+curl http://localhost:5420/api/metrics
+curl http://localhost:5420/api/weather
 
 # Verificar JavaScript no browser console
 ```

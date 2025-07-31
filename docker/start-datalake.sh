@@ -49,7 +49,7 @@ docker compose ps
 # Verificar se app está respondendo
 echo "🔍 Testando conectividade..."
 for i in {1..30}; do
-    if curl -s http://localhost:5000/api/metrics > /dev/null; then
+    if curl -s http://localhost:5420/api/metrics > /dev/null; then
         echo "✅ Aplicação iniciada com sucesso!"
         break
     fi
@@ -61,10 +61,10 @@ done
 echo ""
 echo "🎉 DataLake está rodando!"
 echo "========================"
-echo "📊 Dashboard: http://localhost:5000"
-echo "🔧 API Métricas: http://localhost:5000/api/metrics"
-echo "🌡️ API Weather: http://localhost:5000/api/weather"
-echo "📋 API Jobs: http://localhost:5000/api/jobs"
+echo "📊 Dashboard: http://localhost:5420"
+echo "🔧 API Métricas: http://localhost:5420/api/metrics"
+echo "🌡️ API Weather: http://localhost:5420/api/weather"
+echo "📋 API Jobs: http://localhost:5420/api/jobs"
 echo ""
 echo "💡 Comandos úteis:"
 echo "   Ver logs: docker compose logs -f"

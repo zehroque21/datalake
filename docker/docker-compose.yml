@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # DataLake Application
   datalake:
@@ -7,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "5000:5000"
+      - "5420:5000"
     environment:
       - FLASK_ENV=development
       - FLASK_DEBUG=1
