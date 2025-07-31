@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DataLake Native - Dashboard</title>
+    <title>DataLake - Dashboard</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,40 +14,144 @@
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
     <style>
-        .card {
-            @apply bg-white rounded-lg shadow-md p-6 border border-gray-100;
+        /* Custom CSS para design moderno */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
         }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .gradient-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
         .metric-card {
-            @apply card text-center;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
         }
-        .status-success { @apply text-green-600 bg-green-100 px-2 py-1 rounded-full text-xs font-medium; }
-        .status-error { @apply text-red-600 bg-red-100 px-2 py-1 rounded-full text-xs font-medium; }
-        .status-running { @apply text-blue-600 bg-blue-100 px-2 py-1 rounded-full text-xs font-medium; }
+        
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.6s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .chart-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+        
+        .status-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .status-error {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        
+        .status-running {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        
+        .btn-modern {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+        
+        .btn-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+        }
+        
+        .table-modern {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
     </style>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <div x-data="dashboard()" x-init="init()">
+<body class="gradient-bg min-h-screen">
+    <div x-data="dashboard()" x-init="init()" class="min-h-screen">
         <!-- Header -->
-        <header class="bg-white shadow-sm border-b border-gray-200">
+        <header class="glass border-b border-white/20">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center py-4">
-                    <div class="flex items-center">
-                        <h1 class="text-2xl font-bold text-gray-900">
-                            🌊 DataLake Native
-                        </h1>
-                        <span class="ml-3 px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                            v1.0 - Simples
-                        </span>
+                <div class="flex justify-between items-center py-6">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                            <i data-lucide="database" class="w-6 h-6 text-white"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-2xl font-bold text-white">DataLake</h1>
+                            <p class="text-white/70 text-sm">Dashboard de Monitoramento</p>
+                        </div>
                     </div>
+                    
                     <div class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-2 text-white/80">
+                            <div class="w-2 h-2 bg-green-400 rounded-full pulse-dot"></div>
+                            <span class="text-sm">Sistema Online</span>
+                        </div>
+                        
                         <button @click="refreshData()" 
-                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
-                            🔄 Atualizar
-                        </button>
-                        <button @click="triggerJob('weather_collection')" 
-                                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium">
-                            ▶️ Executar Job
+                                class="btn-modern text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+                            <i data-lucide="refresh-cw" class="w-4 h-4" :class="{'animate-spin': loading}"></i>
+                            <span>Atualizar</span>
                         </button>
                     </div>
                 </div>
@@ -56,72 +160,127 @@
 
         <!-- Main Content -->
         <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            
-            <!-- Métricas Cards -->
+            <!-- Metrics Cards -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div class="metric-card">
-                    <div class="text-3xl font-bold text-blue-600" x-text="metrics.jobs_today || 0"></div>
-                    <div class="text-sm text-gray-600 mt-1">Jobs Hoje</div>
-                </div>
-                
-                <div class="metric-card">
-                    <div class="text-3xl font-bold text-green-600" x-text="metrics.successful_jobs || 0"></div>
-                    <div class="text-sm text-gray-600 mt-1">Sucessos</div>
-                </div>
-                
-                <div class="metric-card">
-                    <div class="text-3xl font-bold text-red-600" x-text="metrics.failed_jobs || 0"></div>
-                    <div class="text-sm text-gray-600 mt-1">Falhas</div>
-                </div>
-                
-                <div class="metric-card">
-                    <div class="text-3xl font-bold text-purple-600" x-text="metrics.success_rate + '%' || '0%'"></div>
-                    <div class="text-sm text-gray-600 mt-1">Taxa Sucesso</div>
-                </div>
-            </div>
-
-            <!-- Gráficos -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <!-- Gráfico de Temperatura -->
-                <div class="card">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-lg font-semibold text-gray-900">🌡️ Temperatura (24h)</h2>
-                        <span class="text-sm text-gray-500" x-text="'Última: ' + (lastTemperature || 'N/A') + '°C'"></span>
+                <!-- Jobs Hoje -->
+                <div class="metric-card rounded-2xl p-6 fade-in">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm font-medium">Jobs Hoje</p>
+                            <p class="text-3xl font-bold text-gray-900 mt-1" x-text="metrics.jobs_today || '0'"></p>
+                        </div>
+                        <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                            <i data-lucide="play-circle" class="w-6 h-6 text-blue-600"></i>
+                        </div>
                     </div>
-                    <canvas id="temperatureChart" width="400" height="200"></canvas>
-                </div>
-                
-                <!-- Status dos Jobs -->
-                <div class="card">
-                    <h2 class="text-lg font-semibold text-gray-900 mb-4">📊 Status dos Jobs</h2>
-                    <div class="space-y-3">
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm font-medium text-gray-700">Coleta Meteorológica</span>
-                            <span x-show="metrics.last_execution" 
-                                  :class="'status-' + (metrics.last_execution?.status || 'unknown')"
-                                  x-text="metrics.last_execution?.status || 'N/A'">
-                            </span>
-                        </div>
-                        <div class="text-xs text-gray-500" x-show="metrics.last_execution">
-                            Última execução: <span x-text="formatDateTime(metrics.last_execution?.timestamp)"></span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-green-600 h-2 rounded-full" 
-                                 :style="'width: ' + (metrics.success_rate || 0) + '%'"></div>
+                    <div class="mt-4 flex items-center">
+                        <div class="flex items-center text-green-600 text-sm">
+                            <i data-lucide="trending-up" class="w-4 h-4 mr-1"></i>
+                            <span x-text="metrics.success_rate || '0'">0</span>% sucesso
                         </div>
                     </div>
                 </div>
+
+                <!-- Jobs Bem-sucedidos -->
+                <div class="metric-card rounded-2xl p-6 fade-in" style="animation-delay: 0.1s">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm font-medium">Sucessos</p>
+                            <p class="text-3xl font-bold text-green-600 mt-1" x-text="metrics.successful_jobs || '0'"></p>
+                        </div>
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                            <i data-lucide="check-circle" class="w-6 h-6 text-green-600"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <div class="text-gray-500 text-sm">Última execução</div>
+                        <div class="text-sm font-medium" x-text="formatTime(metrics.last_execution?.timestamp)">-</div>
+                    </div>
+                </div>
+
+                <!-- Jobs com Falha -->
+                <div class="metric-card rounded-2xl p-6 fade-in" style="animation-delay: 0.2s">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm font-medium">Falhas</p>
+                            <p class="text-3xl font-bold text-red-600 mt-1" x-text="metrics.failed_jobs || '0'"></p>
+                        </div>
+                        <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+                            <i data-lucide="x-circle" class="w-6 h-6 text-red-600"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <div class="text-gray-500 text-sm">Taxa de falha</div>
+                        <div class="text-sm font-medium" x-text="(100 - (metrics.success_rate || 0)).toFixed(1) + '%'">0%</div>
+                    </div>
+                </div>
+
+                <!-- Total de Jobs -->
+                <div class="metric-card rounded-2xl p-6 fade-in" style="animation-delay: 0.3s">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-600 text-sm font-medium">Total</p>
+                            <p class="text-3xl font-bold text-purple-600 mt-1" x-text="metrics.total_jobs || '0'"></p>
+                        </div>
+                        <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                            <i data-lucide="activity" class="w-6 h-6 text-purple-600"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button @click="triggerJob('weather_collection')" 
+                                class="btn-modern text-white px-3 py-1 rounded-lg text-sm flex items-center space-x-1">
+                            <i data-lucide="play" class="w-3 h-3"></i>
+                            <span>Executar Job</span>
+                        </button>
+                    </div>
+                </div>
             </div>
 
-            <!-- Tabela de Execuções -->
-            <div class="card">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold text-gray-900">📋 Últimas Execuções</h2>
-                    <span class="text-sm text-gray-500" x-text="'Total: ' + (jobExecutions.length || 0)"></span>
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <!-- Temperature Chart -->
+                <div class="chart-container fade-in" style="animation-delay: 0.4s">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-semibold text-gray-900">Temperatura - Campinas</h3>
+                        <div class="flex items-center space-x-2 text-gray-500">
+                            <i data-lucide="thermometer" class="w-5 h-5"></i>
+                            <span class="text-sm">Últimas 24h</span>
+                        </div>
+                    </div>
+                    <div class="relative h-64">
+                        <canvas id="temperatureChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Humidity Chart -->
+                <div class="chart-container fade-in" style="animation-delay: 0.5s">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-semibold text-gray-900">Umidade</h3>
+                        <div class="flex items-center space-x-2 text-gray-500">
+                            <i data-lucide="droplets" class="w-5 h-5"></i>
+                            <span class="text-sm">Últimas 24h</span>
+                        </div>
+                    </div>
+                    <div class="relative h-64">
+                        <canvas id="humidityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Jobs Table -->
+            <div class="table-modern fade-in" style="animation-delay: 0.6s">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-900">Execuções Recentes</h3>
+                        <div class="flex items-center space-x-2 text-gray-500">
+                            <i data-lucide="clock" class="w-4 h-4"></i>
+                            <span class="text-sm">Últimas 20 execuções</span>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
+                    <table class="w-full">
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job</th>
@@ -131,16 +290,34 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <template x-for="execution in jobExecutions.slice(0, 10)" :key="execution.id">
-                                <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" x-text="execution.job_name"></td>
+                        <tbody class="divide-y divide-gray-200">
+                            <template x-for="job in jobs" :key="job.id">
+                                <tr class="hover:bg-gray-50 transition-colors">
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <span :class="'status-' + execution.status" x-text="execution.status"></span>
+                                        <div class="flex items-center">
+                                            <i data-lucide="zap" class="w-4 h-4 text-blue-500 mr-2"></i>
+                                            <span class="text-sm font-medium text-gray-900" x-text="job.job_name"></span>
+                                        </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="formatDuration(execution.duration_seconds)"></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="execution.records_processed || 0"></td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="formatDateTime(execution.start_time)"></td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                                              :class="{
+                                                  'bg-green-100 text-green-800': job.status === 'success',
+                                                  'bg-red-100 text-red-800': job.status === 'error',
+                                                  'bg-yellow-100 text-yellow-800': job.status === 'running'
+                                              }"
+                                              x-text="job.status === 'success' ? 'Sucesso' : job.status === 'error' ? 'Erro' : 'Executando'">
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <span x-text="job.duration_seconds ? job.duration_seconds.toFixed(3) + 's' : '-'"></span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        <span x-text="job.records_processed || '0'"></span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <span x-text="formatTime(job.start_time)"></span>
+                                    </td>
                                 </tr>
                             </template>
                         </tbody>
@@ -155,66 +332,78 @@
             return {
                 metrics: {},
                 weatherData: [],
-                jobExecutions: [],
-                lastTemperature: null,
+                jobs: [],
+                loading: false,
                 temperatureChart: null,
+                humidityChart: null,
 
                 async init() {
                     await this.loadData();
                     this.initCharts();
+                    this.startAutoRefresh();
                     
-                    // Auto-refresh a cada 30 segundos
-                    setInterval(() => this.refreshData(), 30000);
+                    // Initialize Lucide icons
+                    lucide.createIcons();
                 },
 
                 async loadData() {
+                    this.loading = true;
                     try {
-                        // Carregar métricas
-                        const metricsResponse = await fetch('/api/metrics');
-                        this.metrics = await metricsResponse.json();
-
-                        // Carregar dados meteorológicos
-                        const weatherResponse = await fetch('/api/weather');
-                        this.weatherData = await weatherResponse.json();
-                        
-                        if (this.weatherData.length > 0) {
-                            this.lastTemperature = this.weatherData[this.weatherData.length - 1].temperature;
-                        }
-
-                        // Carregar execuções
-                        const jobsResponse = await fetch('/api/jobs');
-                        const jobsData = await jobsResponse.json();
-                        this.jobExecutions = jobsData.executions || [];
-
-                        this.updateCharts();
+                        await Promise.all([
+                            this.loadMetrics(),
+                            this.loadWeatherData(),
+                            this.loadJobs()
+                        ]);
                     } catch (error) {
                         console.error('Erro ao carregar dados:', error);
+                    } finally {
+                        this.loading = false;
                     }
                 },
 
-                async refreshData() {
-                    await this.loadData();
+                async loadMetrics() {
+                    try {
+                        const response = await fetch('/api/metrics');
+                        this.metrics = await response.json();
+                    } catch (error) {
+                        console.error('Erro ao carregar métricas:', error);
+                        this.metrics = {
+                            jobs_today: 0,
+                            successful_jobs: 0,
+                            failed_jobs: 0,
+                            total_jobs: 0,
+                            success_rate: 0,
+                            last_execution: null
+                        };
+                    }
                 },
 
-                async triggerJob(jobName) {
+                async loadWeatherData() {
                     try {
-                        const response = await fetch(`/api/jobs/trigger/${jobName}`);
-                        const result = await response.json();
-                        
-                        if (response.ok) {
-                            alert('Job executado com sucesso!');
-                            setTimeout(() => this.refreshData(), 2000);
-                        } else {
-                            alert('Erro: ' + result.error);
-                        }
+                        const response = await fetch('/api/weather');
+                        this.weatherData = await response.json();
+                        this.updateCharts();
                     } catch (error) {
-                        alert('Erro ao executar job: ' + error.message);
+                        console.error('Erro ao carregar dados meteorológicos:', error);
+                        this.weatherData = [];
+                    }
+                },
+
+                async loadJobs() {
+                    try {
+                        const response = await fetch('/api/jobs');
+                        const data = await response.json();
+                        this.jobs = data.executions || [];
+                    } catch (error) {
+                        console.error('Erro ao carregar jobs:', error);
+                        this.jobs = [];
                     }
                 },
 
                 initCharts() {
-                    const ctx = document.getElementById('temperatureChart').getContext('2d');
-                    this.temperatureChart = new Chart(ctx, {
+                    // Temperature Chart
+                    const tempCtx = document.getElementById('temperatureChart').getContext('2d');
+                    this.temperatureChart = new Chart(tempCtx, {
                         type: 'line',
                         data: {
                             labels: [],
@@ -223,56 +412,159 @@
                                 data: [],
                                 borderColor: 'rgb(59, 130, 246)',
                                 backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                borderWidth: 3,
+                                fill: true,
                                 tension: 0.4,
-                                fill: true
+                                pointBackgroundColor: 'rgb(59, 130, 246)',
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 2,
+                                pointRadius: 6,
+                                pointHoverRadius: 8
                             }]
                         },
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
-                            scales: {
-                                y: {
-                                    beginAtZero: false,
-                                    title: {
-                                        display: true,
-                                        text: 'Temperatura (°C)'
-                                    }
-                                },
-                                x: {
-                                    title: {
-                                        display: true,
-                                        text: 'Horário'
-                                    }
-                                }
-                            },
                             plugins: {
                                 legend: {
                                     display: false
                                 }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: false,
+                                    grid: {
+                                        color: 'rgba(0, 0, 0, 0.05)'
+                                    },
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value + '°C';
+                                        }
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        color: 'rgba(0, 0, 0, 0.05)'
+                                    }
+                                }
+                            },
+                            interaction: {
+                                intersect: false,
+                                mode: 'index'
+                            }
+                        }
+                    });
+
+                    // Humidity Chart
+                    const humCtx = document.getElementById('humidityChart').getContext('2d');
+                    this.humidityChart = new Chart(humCtx, {
+                        type: 'line',
+                        data: {
+                            labels: [],
+                            datasets: [{
+                                label: 'Umidade (%)',
+                                data: [],
+                                borderColor: 'rgb(16, 185, 129)',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                borderWidth: 3,
+                                fill: true,
+                                tension: 0.4,
+                                pointBackgroundColor: 'rgb(16, 185, 129)',
+                                pointBorderColor: '#ffffff',
+                                pointBorderWidth: 2,
+                                pointRadius: 6,
+                                pointHoverRadius: 8
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    grid: {
+                                        color: 'rgba(0, 0, 0, 0.05)'
+                                    },
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value + '%';
+                                        }
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        color: 'rgba(0, 0, 0, 0.05)'
+                                    }
+                                }
+                            },
+                            interaction: {
+                                intersect: false,
+                                mode: 'index'
                             }
                         }
                     });
                 },
 
                 updateCharts() {
-                    if (this.temperatureChart && this.weatherData.length > 0) {
-                        const labels = this.weatherData.map(d => new Date(d.timestamp).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'}));
-                        const temperatures = this.weatherData.map(d => d.temperature);
+                    if (!this.temperatureChart || !this.humidityChart) return;
 
-                        this.temperatureChart.data.labels = labels;
-                        this.temperatureChart.data.datasets[0].data = temperatures;
-                        this.temperatureChart.update();
+                    const labels = this.weatherData.map(item => 
+                        new Date(item.timestamp).toLocaleTimeString('pt-BR', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                        })
+                    ).reverse();
+
+                    const temperatures = this.weatherData.map(item => item.temperature).reverse();
+                    const humidity = this.weatherData.map(item => item.humidity).reverse();
+
+                    // Update temperature chart
+                    this.temperatureChart.data.labels = labels;
+                    this.temperatureChart.data.datasets[0].data = temperatures;
+                    this.temperatureChart.update('none');
+
+                    // Update humidity chart
+                    this.humidityChart.data.labels = labels;
+                    this.humidityChart.data.datasets[0].data = humidity;
+                    this.humidityChart.update('none');
+                },
+
+                async triggerJob(jobName) {
+                    try {
+                        const response = await fetch(`/api/jobs/trigger/${jobName}`, {
+                            method: 'POST'
+                        });
+                        
+                        if (response.ok) {
+                            // Aguardar um pouco e recarregar dados
+                            setTimeout(() => {
+                                this.loadData();
+                            }, 1000);
+                        }
+                    } catch (error) {
+                        console.error('Erro ao executar job:', error);
                     }
                 },
 
-                formatDateTime(dateString) {
-                    if (!dateString) return 'N/A';
-                    return new Date(dateString).toLocaleString('pt-BR');
+                async refreshData() {
+                    await this.loadData();
                 },
 
-                formatDuration(seconds) {
-                    if (!seconds) return 'N/A';
-                    return seconds < 60 ? `${seconds.toFixed(1)}s` : `${(seconds/60).toFixed(1)}min`;
+                startAutoRefresh() {
+                    setInterval(() => {
+                        this.loadData();
+                    }, 30000); // Atualizar a cada 30 segundos
+                },
+
+                formatTime(timestamp) {
+                    if (!timestamp) return '-';
+                    return new Date(timestamp).toLocaleString('pt-BR');
                 }
             }
         }

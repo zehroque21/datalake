@@ -28,6 +28,22 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Database
 db = SQLAlchemy(app)
 
+# Criar tabelas automaticamente quando o app inicializar
+@app.before_first_request
+def create_tables():
+    """Criar tabelas automaticamente na primeira requisição"""
+    try:
+        db.create_all()
+        logger.info("✅ Tabelas do banco criadas com sucesso")
+        
+        # Executar coleta inicial se não houver dados
+        if WeatherData.query.count() == 0:
+            collect_weather_data()
+            logger.info("🌡️ Coleta inicial de dados executada")
+            
+    except Exception as e:
+        logger.error(f"❌ Erro ao criar tabelas: {e}")
+
 # Models
 class JobExecution(db.Model):
     id = db.Column(db.Integer, primary_key=True)
