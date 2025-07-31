@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataLake Native - Modern Data Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #c0392b; /* vermelho sofisticado */
+            --primary-dark: #922b21; /* vermelho escuro */
+            --secondary: #f6e8e6; /* vermelho claro, suave */
+            --accent: #e67e22; /* laranja queimado para destaque */
+            --text-dark: #2d2320;
+            --text-light: #8d6e63;
+            --bg-light: #fdf6f4;
+            --white: #ffffff;
+            --shadow: 0 4px 24px rgba(192, 57, 43, 0.07);
+            --shadow-hover: 0 8px 32px rgba(192, 57, 43, 0.12);
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background: var(--bg-light);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        header {
+            background: var(--white);
+            box-shadow: var(--shadow);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-dark);
+            font-weight: 500;
+            transition: color 0.2s;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+        .nav-links a:hover {
+            background: var(--secondary);
+            color: var(--primary-dark);
+        }
+
+        main {
+            margin-top: 80px;
+            padding: 2rem 0;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 4.5rem 0 3.5rem 0;
+            color: var(--text-dark);
+            background: var(--white);
+            border-radius: 0 0 32px 32px;
+            box-shadow: 0 2px 24px rgba(30,64,175,0.04);
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .highlight {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .cta-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--primary);
+            color: var(--white);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+            box-shadow: var(--shadow);
+        }
+
+        .cta-button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .section {
+            padding: 4rem 0;
+        }
+
+        .section h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            margin-bottom: 3rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 14px;
+            text-align: center;
+            transition: box-shadow 0.2s, transform 0.2s;
+            border: 1px solid #e5e7eb;
+            box-shadow: var(--shadow);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+
+        .feature-card p {
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        .deployment-highlight {
+            background: var(--secondary);
+            color: var(--text-dark);
+            padding: 3rem 0;
+            border-radius: 24px;
+            margin: 2rem 0;
+        }
+
+        .deployment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .deployment-option {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s;
+        }
+
+        .deployment-option:hover {
+            transform: translateY(-3px);
+        }
+
+        .deployment-icon {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .new-badge {
+            background: var(--accent);
+            color: var(--white);
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .architecture-diagram {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 16px;
+            margin: 2rem 0;
+            box-shadow: var(--shadow);
+        }
+
+        .flow-diagram {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin: 2rem 0;
+        }
+
+        .flow-step {
+            background: var(--bg-light);
+            border: 2px solid var(--primary);
+            padding: 1rem;
+            border-radius: 12px;
+            text-align: center;
+            min-width: 120px;
+            transition: all 0.2s;
+        }
+
+        .flow-step:hover {
+            background: var(--secondary);
+            transform: scale(1.05);
+        }
+
+        .flow-arrow {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        .creator-section {
+            background: var(--white);
+            padding: 3rem;
+            border-radius: 24px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            margin: 2rem 0;
+        }
+
+        .creator-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 1.5rem auto;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: var(--white);
+        }
+
+        .creator-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 0.1rem;
+        }
+
+        .creator-role {
+            color: var(--text-light);
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .creator-bio {
+            color: var(--text-dark);
+            font-size: 1rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .creator-socials {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 1.2rem;
+        }
+
+        .social-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--secondary);
+            color: var(--primary-dark);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.3rem;
+            text-decoration: none;
+            transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+            box-shadow: 0 2px 8px rgba(30,64,175,0.08);
+        }
+        .social-link:hover {
+            background: var(--primary);
+            color: #fff;
+            transform: scale(1.08);
+            box-shadow: 0 4px 16px rgba(30,64,175,0.13);
+        }
+
+        .tech-stack {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .tech-badge {
+            background: var(--bg-light);
+            color: var(--text-dark);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border: 1px solid #e5e7eb;
+        }
+
+        footer {
+            background: var(--text-dark);
+            color: var(--white);
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 4rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .flow-diagram {
+                flex-direction: column;
+            }
+            
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">
+                <i class="fas fa-database"></i> DataLake Native
+            </div>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#deployment">Deployment</a></li>
+                <li><a href="#about">About</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h1>DataLake Native</h1>
+                <p>Lightweight, file-based data lake with modern web dashboard and <span class="highlight">dual deployment</span> architecture</p>
+                <a href="https://github.com/zehroque21/datalake" class="cta-button">
+                    <i class="fab fa-github"></i> View on GitHub
+                </a>
+            </div>
+        </section>
+
+        <section class="deployment-highlight">
+            <div class="container">
+                <h2><i class="fas fa-rocket"></i> Dual Deployment Architecture <span class="new-badge">UPDATED</span></h2>
+                <p>Choose your deployment strategy: Docker for local development, AWS for production</p>
+                
+                <div class="deployment-grid">
+                    <div class="deployment-option">
+                        <div class="deployment-icon">
+                            <i class="fab fa-docker"></i>
+                        </div>
+                        <h3>Local Development</h3>
+                        <p>Docker Native solution for testing and development</p>
+                        <div class="tech-stack">
+                            <span class="tech-badge">Flask</span>
+                            <span class="tech-badge">JSON Storage</span>
+                            <span class="tech-badge">Docker</span>
+                        </div>
+                    </div>
+                    <div class="deployment-option">
+                        <div class="deployment-icon">
+                            <i class="fab fa-aws"></i>
+                        </div>
+                        <h3>AWS Production</h3>
+                        <p>Terraform-managed infrastructure with Prefect orchestration</p>
+                        <div class="tech-stack">
+                            <span class="tech-badge">EC2</span>
+                            <span class="tech-badge">S3</span>
+                            <span class="tech-badge">Terraform</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="section">
+            <div class="container">
+                <h2>Key Features</h2>
+                <p class="section-subtitle">Modern data platform with flexible deployment options</p>
+                
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <h3>File-Based Storage</h3>
+                        <p>Zero database dependencies with JSON file storage, S3-compatible and cloud-ready</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3>Real-Time Dashboard</h3>
+                        <p>Modern web interface with glassmorphism design, live metrics, and data visualization</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <h3>Job Orchestration</h3>
+                        <p>Built-in scheduler with execution tracking, error handling, and manual triggers</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-cloud"></i>
+                        </div>
+                        <h3>Weather Pipeline</h3>
+                        <p>Example data collection pipeline for meteorological data with OpenWeatherMap integration</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h3>Responsive Design</h3>
+                        <p>Mobile-friendly interface that works perfectly on desktop and mobile devices</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h3>Production Ready</h3>
+                        <p>Terraform infrastructure, GitHub Actions CI/CD, and comprehensive monitoring</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="architecture" class="section">
+            <div class="container">
+                <h2>Architecture Overview</h2>
+                <p class="section-subtitle">Simple, scalable, and production-ready architecture</p>
+                
+                <div class="architecture-diagram">
+                    <h3>Data Flow Pipeline</h3>
+                    <div class="flow-diagram">
+                        <div class="flow-step">
+                            <i class="fas fa-play"></i>
+                            <div>Trigger</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">
+                            <i class="fas fa-download"></i>
+                            <div>Collect</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">
+                            <i class="fas fa-check"></i>
+                            <div>Validate</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">
+                            <i class="fas fa-save"></i>
+                            <div>Store</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">
+                            <i class="fas fa-chart-bar"></i>
+                            <div>Monitor</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <h3>Storage Structure</h3>
+                        <p><strong>data/raw/weather/</strong> - Raw weather data (JSON)<br>
+                        <strong>data/processed/</strong> - Processed datasets<br>
+                        <strong>data/logs/</strong> - Job execution logs<br>
+                        <strong>data/metrics/</strong> - Calculated metrics</p>
+                    </div>
+                    
+                    <div class="feature-card">
+                        <h3>Technology Stack</h3>
+                        <div class="tech-stack">
+                            <span class="tech-badge">Python 3.11+</span>
+                            <span class="tech-badge">Flask</span>
+                            <span class="tech-badge">Alpine.js</span>
+                            <span class="tech-badge">Chart.js</span>
+                            <span class="tech-badge">Tailwind CSS</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="deployment" class="section">
+            <div class="container">
+                <h2>Deployment Options</h2>
+                <p class="section-subtitle">Choose the right deployment for your needs</p>
+                
+                <div class="deployment-grid">
+                    <div class="deployment-option">
+                        <div class="deployment-icon">
+                            <i class="fab fa-docker"></i>
+                        </div>
+                        <h3>Docker Local</h3>
+                        <p><strong>Perfect for:</strong> Development, testing, demos</p>
+                        <p><strong>Setup:</strong> docker-compose up -d</p>
+                        <p><strong>Features:</strong> File-based storage, instant startup</p>
+                    </div>
+                    
+                    <div class="deployment-option">
+                        <div class="deployment-icon">
+                            <i class="fab fa-aws"></i>
+                        </div>
+                        <h3>AWS Production</h3>
+                        <p><strong>Perfect for:</strong> Production, scaling, enterprise</p>
+                        <p><strong>Setup:</strong> terraform apply</p>
+                        <p><strong>Features:</strong> EC2, S3, IAM, auto-scaling</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="section">
+            <div class="container">
+                <div class="creator-section">
+                    <div class="creator-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="creator-name">Amado Roque</div>
+                    <div class="creator-role">Data Engineer & Cloud Architect</div>
+                    <div class="creator-bio">
+                        Passionate about building scalable data platforms and modern cloud architectures. 
+                        Focused on creating simple, effective solutions for complex data challenges.
+                    </div>
+                    <div class="creator-socials">
+                        <a href="https://github.com/zehroque21" class="social-link" target="_blank">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <a href="mailto:muja.dr21@gmail.com" class="social-link">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                        <a href="https://linkedin.com/in/amadoroque" class="social-link" target="_blank">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                    </div>
+                    <div class="tech-stack">
+                        <span class="tech-badge">Python</span>
+                        <span class="tech-badge">AWS</span>
+                        <span class="tech-badge">Terraform</span>
+                        <span class="tech-badge">Docker</span>
+                        <span class="tech-badge">Data Engineering</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 DataLake Native. Built with ❤️ by Amado Roque. Licensed under MIT.</p>
+        </div>
+    </footer>
+</body>
+</html>
+
