@@ -9,9 +9,9 @@ services:
     environment:
       - FLASK_ENV=development
       - FLASK_DEBUG=1
-      - DATABASE_URL=sqlite:///data/datalake.db
+      - STORAGE_TYPE=local
     volumes:
-      - datalake_data:/app/data
+      - ./data:/app/data  # Volume para dados locais
       - ./app:/app  # Para desenvolvimento - remover em produção
     networks:
       - datalake
@@ -39,8 +39,6 @@ services:
       - postgres  # Ativar com: docker compose --profile postgres up
 
 volumes:
-  datalake_data:
-    driver: local
   postgres_data:
     driver: local
 
